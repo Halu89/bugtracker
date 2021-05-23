@@ -1,24 +1,19 @@
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const DB_URI = process.env.DB_URI || "mongodb://localhost:27017/bugtracker";
-
-mongoose
-  .connect(DB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log(`Database connected (${DB_URI})`))
-  .catch((e) => console.error(`Error with the database connection`, e.message));
-
-const IssueSchema = new mongoose.Schema(
+const IssueSchema = new Schema(
   {
     title: { type: String, required: true },
-    project: { type: String, required: true },
     description: { type: String, required: false },
+    project: { type: String, required: true },
+    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    assignedTo: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    statusText: String,
+    isOpen: { type: Boolean, default: true },
   },
   { timestamps: true }
 );
 
-const Issue = mongoose.model("issue", IssueSchema);
+const Issue = mongoose.model("Issue", IssueSchema);
 
 module.exports = Issue;

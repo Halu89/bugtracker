@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Issue = require("../models/issue");
+const {Issue, User} = require("../models");
 const catchAsync = require("../utils/catchAsync");
 const ExpressError = require("../utils/ExpressError");
 
@@ -11,11 +11,14 @@ const ExpressError = require("../utils/ExpressError");
 // })
 
 //Index
-router.get("/", (req, res) => {
-  Issue.find({ project: req.project }).then((docs) => {
-    res.json(docs);
-  });
-});
+router.get(
+  "/",
+  catchAsync(async (req, res, next) => {
+    Issue.find({ project: req.project }).then((docs) => {
+      res.json(docs);
+    });
+  })
+);
 
 //Create
 router.post(

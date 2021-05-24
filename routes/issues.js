@@ -1,14 +1,9 @@
 const express = require("express");
 const router = express.Router();
+
 const {Issue, User} = require("../models");
 const catchAsync = require("../utils/catchAsync");
 const ExpressError = require("../utils/ExpressError");
-
-// middleware that is specific to this router
-// router.use(function timeLog (req, res, next) {
-//   console.log('Time: ', Date.now())
-//   next()
-// })
 
 //Index
 router.get(
@@ -31,15 +26,6 @@ router.post(
     return res.json(doc);
   })
 );
-
-router.get("/new", (req, res) => {
-  // Show new issue form
-  res.send(`Getting the new issue form`);
-});
-router.get("/:id/edit", (req, res) => {
-  // Show edit issue form
-  res.send(`Getting the ${req.params.id} issue edit form`);
-});
 
 router
   .route("/:id")

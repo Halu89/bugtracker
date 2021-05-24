@@ -1,7 +1,7 @@
 const express = require("express");
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 
-const {Issue, User} = require("../models");
+const { Issue, User } = require("../models");
 const catchAsync = require("../utils/catchAsync");
 const ExpressError = require("../utils/ExpressError");
 
@@ -9,7 +9,8 @@ const ExpressError = require("../utils/ExpressError");
 router.get(
   "/",
   catchAsync(async (req, res, next) => {
-    Issue.find({ project: req.project }).then((docs) => {
+    const { project } = req.params;
+    Issue.find({ project }).then((docs) => {
       res.json(docs);
     });
   })

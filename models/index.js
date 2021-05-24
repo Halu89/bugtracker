@@ -10,9 +10,8 @@ mongoose
     useUnifiedTopology: true,
     useCreateIndex: true,
     useFindAndModify: false,
-    // debug:true
   })
-  .then(() => console.log(`Database connected (${DB_URI})`))
+  .then(() => console.log(`Database connected`))
   .catch((e) => console.error(`Error with the database connection`, e.message));
 
 //LOG mongoose operations if NODE_ENV = dev

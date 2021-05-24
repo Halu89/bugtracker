@@ -47,10 +47,7 @@ router.post(
   "/signin",
   catchAsync(async function (req, res, next) {
     const { username, password } = req.body;
-    const { error, user } = await User.findOne({ username })
-      .then((user) => user.authenticate(password))
-      .catch((e) => next(e));
-    // await User.findOneAndAuth(username,password)
+    const { user, error } = await User.findOneAndAuth(username, password);
 
     if (error)
       return next(new ExpressError("Password or username incorrect", 401));

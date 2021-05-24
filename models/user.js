@@ -11,15 +11,10 @@ const UserSchema = new Schema({
 // Add a username, hashed password and salt value
 UserSchema.plugin(passportLocalMongoose);
 
-//TODO add method findOneAndAuthenticate
-
 UserSchema.statics.findOneAndAuth = async function (username, password) {
-  
-  const user = await this.authenticate(username,password)
-  console.log('user :>> ', user.toString());
-    
-  
+  return this.authenticate()(username, password);
 };
+
 const User = mongoose.model("User", UserSchema);
 
 module.exports = User;

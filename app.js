@@ -19,7 +19,7 @@ const authRouter = require("./routes/auth");
 // Routes
 app.get("/", (req, res) => res.sendFile("index"));
 
-app.use("/projects/:project", issueRouter);
+app.use("/projects/:project", ensureAuth(), issueRouter); // TODO : Ensure correct user
 app.use("/auth", authRouter);
 
 app.get("/protected", ensureAuth(), (req, res) => {

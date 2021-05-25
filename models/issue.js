@@ -14,6 +14,8 @@ const IssueSchema = new Schema(
   { timestamps: true }
 );
 
+//TODO : Add a preinsert hook to add the issue to the author user
+
 const Issue = mongoose.model("Issue", IssueSchema);
 
 module.exports = Issue;

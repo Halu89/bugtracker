@@ -4,7 +4,7 @@ const passportLocalMongoose = require("passport-local-mongoose");
 
 const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
-  projects: [{ type: Schema.Types.ObjectId, ref: "Project" }],
+  projects: [{ type: Schema.Types.ObjectId, ref: "Project" }], // TODO
   issues: [{ type: Schema.Types.ObjectId, ref: "Issue" }],
 });
 

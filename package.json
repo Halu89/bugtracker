@@ -21,6 +21,6 @@
     "passport-local-mongoose": "^6.1.0"
   },
   "nodemonConfig": {
-    "delay": "10000"
+    "delay": "5000"
   }
 }

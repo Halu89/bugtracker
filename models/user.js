@@ -8,7 +8,7 @@ const UserSchema = new Schema({
   issues: [{ type: Schema.Types.ObjectId, ref: "Issue" }],
 });
 
-// Add a username, hashed password and salt value
+// Adds a username, hashed password and salt values and a few methods to help auth users
 UserSchema.plugin(passportLocalMongoose);
 
 UserSchema.statics.findOneAndAuth = async function (username, password) {

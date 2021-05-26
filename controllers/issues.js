@@ -2,9 +2,11 @@ const { Issue } = require("../models");
 
 const index = async (req, res, next) => {
   const { project } = req.params;
-  Issue.find({ project }).then((issue) => {
-    res.json(issue);
-  });
+  Issue.find({ project })
+    .populate("author", ["username", "email"])
+    .then((issue) => {
+      res.json(issue);
+    });
 };
 
 const create = async (req, res, next) => {
@@ -20,14 +22,16 @@ const create = async (req, res, next) => {
 };
 
 const show = async (req, res, _next) => {
-  const { project, id } = req.params;
-  const issue = await Issue.findById(id);
-
+  const {  id } = req.params;
+  const issue = await Issue.findById(id).populate("author", [
+    "username",
+    "email",
+  ]);
   res.json(issue);
 };
 
 const update = async (req, res, _next) => {
-  const { project, id } = req.params;
+  const { id } = req.params;
   const update = req.body.issue;
 
   const edited = await Issue.findByIdAndUpdate(id, update, { new: true });
@@ -38,7 +42,7 @@ const destroy = async (req, res, _next) => {
   const { project, id } = req.params;
   await Issue.findByIdAndDelete(id);
 
-  return res.redirect(`/`);
+  return res.json({ success: true });
 };
 
 module.exports = {

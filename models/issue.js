@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
+const User = require("./user");
 
 const IssueSchema = new Schema(
   {
@@ -14,7 +15,27 @@ const IssueSchema = new Schema(
   { timestamps: true }
 );
 
-//TODO : Add a preinsert hook to add the issue to the author user
+// Update the author model of an issue on creation
+IssueSchema.post("save", function (issue) {
+  const authorId = issue.author._id;
+  const issueId = issue._id;
+  User.findById(authorId).then((user) => {
+    // Use MongooseArray method https://mongoosejs.com/docs/api/array.html
+    user.issues.push(issueId);
+    user.save();
+  });
+});
+
+//or on deletion
+IssueSchema.post("findOneAndDelete", function (issue) {
+  if (!issue) throw new Error("Document not found");
+  const authorId = issue.author._id;
+  const issueId = issue._id;
+  User.findById(authorId).then((user) => {
+    user.issues.pull(issueId);
+    user.save();
+  });
+});
 
 const Issue = mongoose.model("Issue", IssueSchema);
 

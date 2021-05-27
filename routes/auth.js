@@ -2,16 +2,14 @@ const express = require("express");
 const router = express.Router();
 
 const catchAsync = require("../utils/catchAsync");
-const { User } = require("../models");
-const { signIn, signUp } = require("../controllers/auth");
-
-
+const User = require("../models");
+const auth = require("../controllers/auth");
 
 // Register
-router.post("/signup", catchAsync(signUp));
+router.post("/signup", catchAsync(auth.signUp));
 
 // Login
-router.post("/signin", catchAsync(signIn));
+router.post("/signin", catchAsync(auth.signIn));
 
 // Delete user
 if (process.env.NODE_ENV === "dev") {

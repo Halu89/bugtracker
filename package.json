@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "start": "node app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --recursive *.test.js"
   },
   "keywords": [],
   "author": "Corentin Briand",
@@ -22,5 +22,14 @@
   },
   "nodemonConfig": {
     "delay": "5000"
+  },
+  "devDependencies": {
+    "chai": "^4.3.4",
+    "chai-as-promised": "^7.1.1",
+    "chai-http": "^4.3.0",
+    "mocha": "^8.4.0",
+    "rewire": "^5.0.0",
+    "sinon": "^11.1.1",
+    "sinon-chai": "^3.7.0"
   }
 }

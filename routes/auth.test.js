@@ -15,8 +15,6 @@ var authRoutes = rewire("./auth");
 var authControllers = rewire("../controllers/auth");
 var catchAsync = rewire("../utils/catchAsync");
 
-// var User = require("../models/user");
-
 app.use("/", authRoutes);
 var sandbox = sinon.createSandbox();
 
@@ -25,12 +23,16 @@ describe("Auth routes", () => {
   let signUpStub;
   beforeEach(() => {
     sandbox.restore();
-    signUpStub = sandbox.stub(authControllers, "signUp").returns("signup");
-    // catchAsync.__set__("wrapper", catchStub);
+    catchStub = sandbox.stub();
+    // signUpStub = sandbox.stub(authControllers, "signUp").returns("signup");
+    catchAsync.__set__("wrapper", catchStub);
+    // use proxyquire to stub ?
   });
   // afterEach(() => {});
 
   context("POST /signup", () => {
+    it.only("should get a passing test");
+
     it("should be ok", (done) => {
       chai
         .request(app)

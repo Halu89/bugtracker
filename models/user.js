@@ -11,6 +11,8 @@ const UserSchema = new Schema({
 // Adds a username, hashed password and salt values and a few methods to help auth users
 UserSchema.plugin(passportLocalMongoose);
 
+//Should test setPassword
+
 UserSchema.statics.findOneAndAuth = async function (username, password) {
   return this.authenticate()(username, password);
 };

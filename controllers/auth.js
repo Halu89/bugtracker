@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const ExpressError = require("../utils/ExpressError");
 const User = require("../models/user");
-const JWT_SECRET = process.env.JWT_SECRET
+const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.signIn = async function (req, res, next) {
   const { username, password } = req.body;
@@ -34,8 +34,9 @@ exports.signUp = async function (req, res, next) {
     res.json({ token });
   } catch (e) {
     if (e.code === 11000) {
-      e.message = "Username or password already taken"; //Replace the default mongoose duplicate field error message
-      next(e);
+      e.message = "Username or email already taken"; //Replace the default mongoose duplicate field error message
+      return next(e);
     }
+    next(e);
   }
 };

@@ -8,8 +8,7 @@ chai.use(chaiAsPromised);
 const rewire = require("rewire");
 
 const mongoose = require("mongoose");
-const ExpressError = require("../utils/ExpressError");
-const { json } = require("express");
+
 let issues = rewire("./issues");
 
 let sandbox = sinon.createSandbox();

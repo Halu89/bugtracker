@@ -9,22 +9,36 @@ chai.use(chaiAsPromised);
 
 const mongoose = require("mongoose");
 var Issue = rewire("./issue");
-const User = require("./user");
-const { fake } = require("sinon");
 
 describe("Issue Model", () => {
-  let id4 = new mongoose.Types.ObjectId();
   let id1 = new mongoose.Types.ObjectId();
   let id2 = new mongoose.Types.ObjectId();
   let id3 = new mongoose.Types.ObjectId();
+  let id4 = new mongoose.Types.ObjectId();
+  let id5 = new mongoose.Types.ObjectId();
+  let id6 = new mongoose.Types.ObjectId();
   const sampleIssue = {
     _id: id4,
     title: "foo",
     description: "fake_description",
-    project: "TODO",
-    author: id1,
-    assignedTo: [id3, id2],
+    project: id5,
+    author: id2,
+    assignedTo: [id6],
     statusText: "fake_status",
+  };
+  const sampleProject = {
+    _id: id5,
+    name: "foo",
+    description: "fake_description",
+    author: id2,
+    issues: [id3, id4, id1],
+  };
+  let sampleUser = {
+    _id: id2,
+    email: "foo@bar.com",
+    username: "foo",
+    issues: [id1, id4],
+    projects: [id5],
   };
   context("Basic fields", () => {
     it("Should return error if required areas are missing", (done) => {
@@ -65,50 +79,98 @@ describe("Issue Model", () => {
     });
   });
   context("Middlewares", () => {
-    let saveStub, findStub, pullStub;
+    let userSaveStub, projectSaveStub, findStub, pullStub;
     const postSave = Issue.__get__("postSave");
     const postDelete = Issue.__get__("postDelete");
 
     beforeEach(() => {
       sinon.restore();
-      saveStub = sinon.stub();
-      pullStub = sinon.stub();
-      findStub = sinon
-        .stub(mongoose.Model, "findById")
-        .resolves({ issues: [1, 2, 3], save: saveStub });
-    });
+      userSaveStub = sinon.stub();
+      projectSaveStub = sinon.stub();
 
-    it("Should add the issue to the related author field on save", async () => {
-      await postSave(sampleIssue);
-      expect(findStub).to.have.been.calledOnceWithExactly(
-        sampleIssue.author._id
-      );
-      expect(saveStub).to.have.been.calledOn(
-        sinon.match.has(
-          "issues",
-          sinon.match.array.deepEquals([1, 2, 3, sampleIssue._id])
-        )
-      );
+      findStub = sinon.stub(mongoose.Model, "findById");
+      sampleProject.save = projectSaveStub;
+      sampleUser.save = userSaveStub;
+      // First call on the user
+      findStub.onCall(0).resolves(sampleUser);
+      // Second call on the project
+      findStub.onCall(1).resolves(sampleProject);
     });
-    it("Should remove the issue to the related author field on delete", async () => {
-      sinon.reset();
-      class fakeArrayClass extends Array {
-        constructor() {
-          super();
-          this.pull = pullStub;
-        }
-      }
-      findStub.resolves({
-        issues: new fakeArrayClass(1, 2, sampleIssue._id),
-        save: saveStub,
+    context("postSave", () => {
+      it("Should add the issue to the related author field on save", async () => {
+        //Save a copy of the user issues
+        const preSaveIssues = [...sampleUser.issues];
+        await postSave(sampleIssue);
+        expect(findStub).to.have.been.calledTwice;
+        expect(findStub.getCall(0)).to.have.been.calledWithExactly(
+          sampleIssue.author._id
+        );
+
+        //Verify that the issue has been added to the user
+        expect(userSaveStub).to.have.been.calledOn(
+          sinon.match.has(
+            "issues",
+            sinon.match.array.deepEquals([...preSaveIssues, sampleIssue._id])
+          )
+        );
       });
+      it("Should add the issue to the Project", async () => {
+        // Save a copy of the project issues
+        const preSave = [...sampleProject.issues];
+        await postSave(sampleIssue);
+        expect(findStub.getCall(1)).to.have.been.calledWithExactly(
+          sampleIssue.project._id
+        );
+        //Verify that the issue has been added to the project
+        expect(projectSaveStub).to.have.been.calledOn(
+          sinon.match.has(
+            "issues",
+            sinon.match.array.deepEquals([...preSave, sampleIssue._id])
+          )
+        );
+      });
+    });
+    context("postDelete", () => {
+      beforeEach(() => {
+        sinon.reset();
+        pullStub = sinon.stub();
+        class fakeArrayClass extends Array {
+          constructor() {
+            super();
+            this.pull = pullStub;
+          }
+        }
+        // Redefine the stubs to add a pull method to the array
+        findStub.onFirstCall().resolves({
+          issues: new fakeArrayClass(1, 2, sampleIssue._id),
+          save: userSaveStub,
+        });
+        findStub.onSecondCall().resolves({
+          issues: new fakeArrayClass(1, 2, sampleIssue._id),
+          save: projectSaveStub,
+        });
+      });
+      it("Should remove the issue to the related author field on delete", async () => {
+        await postDelete(sampleIssue);
 
-      await postDelete(sampleIssue);
+        expect(findStub.getCall(0)).to.have.been.calledWith(
+          sampleIssue.author._id
+        );
+        expect(pullStub.getCall(0)).to.have.been.calledWith(sampleIssue._id);
+        // Can't verify the user object without re implementing the MongooseArray.prototype.pull method
+        // https://mongoosejs.com/docs/api.html#mongoosearray_MongooseArray-pull
+      });
+      it("Should remove the issue to the related project", async () => {
+        await postDelete(sampleIssue);
 
-      expect(findStub).to.have.been.calledOnceWithExactly(
-        sampleIssue.author._id
-      );
-      expect(pullStub).to.have.been.calledWith(sampleIssue._id);
+        expect(findStub).to.have.been.calledTwice;
+        expect(pullStub).to.have.been.calledTwice;
+
+        expect(findStub.getCall(1)).to.have.been.calledWith(
+          sampleIssue.project._id
+        );
+        expect(pullStub.getCall(1)).to.have.been.calledWith(sampleIssue._id);
+      });
     });
   });
 });

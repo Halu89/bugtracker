@@ -1,12 +1,13 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const User = require("./user");
+const Project = require("./project");
 
 const IssueSchema = new Schema(
   {
     title: { type: String, required: true },
     description: { type: String, required: false },
-    project: { type: String, required: true },
+    project: { type: Schema.Types.ObjectId, ref: "Project", required: true },
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     assignedTo: [{ type: Schema.Types.ObjectId, ref: "User" }],
     statusText: String,
@@ -25,6 +26,10 @@ function postSave(issue) {
     user.issues.push(issueId);
     user.save();
   });
+  Project.findById(issue.project._id).then((project) => {
+    project.issues.push(issueId);
+    project.save();
+  });
 }
 IssueSchema.post("save", postSave);
 
@@ -37,9 +42,23 @@ function postDelete(issue) {
     user.issues.pull(issueId);
     user.save();
   });
+
+  // Find the project associated and delete in array
+  Project.findById(issue.project._id).then((project) => {
+    project.issues.pull(issueId);
+    project.save();
+  });
 }
 IssueSchema.post("findOneAndDelete", postDelete);
 
-const Issue = mongoose.model("Issue", IssueSchema);
+//TODO : Add a deletemany hook when we delete a project to remove self from the users
+
+let Issue;
+// Get the model or create it if not registered
+try {
+  Issue = mongoose.model("Issue");
+} catch (e) {
+  Issue = mongoose.model("Issue", IssueSchema);
+}
 
 module.exports = Issue;

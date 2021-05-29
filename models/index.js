@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const Issue = require("./issue");
 const User = require("./user");
+const Project = require("./project");
 
 const DB_URI =
   process.env.NODE_ENV === "production"
@@ -26,4 +27,4 @@ mongoose.set("debug", function (collectionName, methodName, ...methodArgs) {
 });
 
 // mongoose.set("debug", true)
-module.exports = { Issue, User };
+module.exports = { Issue, User, Project };

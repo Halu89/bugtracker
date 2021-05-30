@@ -9,7 +9,8 @@ chai.use(chaiAsPromised);
 
 const mongoose = require("mongoose");
 const Project = rewire("./project");
-const { sampleProject } = require("../utils/tests/sampleData");
+const { sampleProject, sampleUser } = require("../utils/tests/sampleData");
+const sandbox = sinon.createSandbox();
 
 describe("Project Model", () => {
   context("Basic fields", () => {
@@ -41,57 +42,68 @@ describe("Project Model", () => {
     });
   });
   context("Middleware", () => {
-    let saveStub, findStub, pullStub, deleteStub, sampleUser;
+    let saveStub, findStub, pullStub, sampleProjectAuthor;
     const postSave = Project.__get__("postSave");
     const postDelete = Project.__get__("postDelete");
 
     beforeEach(() => {
-      sinon.restore();
-      saveStub = sinon.stub();
-      pullStub = sinon.stub();
-      deleteStub = sinon.stub(mongoose.Model, "deleteMany");
-      sampleUser = { projects: [1, 2, 3], save: saveStub };
-      findStub = sinon.stub(mongoose.Model, "findById").resolves(sampleUser);
+      saveStub = sandbox.stub();
+      pullStub = sandbox.stub();
+      sampleProjectAuthor = { ...sampleUser, save: saveStub };
+      deleteStub = sandbox.stub(mongoose.Model, "findByIdAndDelete");
+      findStub = sandbox
+        .stub(mongoose.Model, "findById")
+        .resolves(sampleProjectAuthor);
+    });
+    afterEach(() => sandbox.restore());
+    context("On save", () => {
+      it("Should add the project to the related author field on save", async () => {
+        const preSave = [...sampleProjectAuthor.projects];
+        await postSave(sampleProject);
+        expect(findStub).to.have.been.calledOnceWithExactly(
+          sampleProject.author._id
+        );
+
+        expect(saveStub).to.have.been.calledOn(
+          sinon.match.has(
+            "projects",
+            sinon.match.array.deepEquals([...preSave, sampleProject._id])
+          )
+        );
+      });
     });
 
-    it("Should add the project to the related author field on save", async () => {
-      await postSave(sampleProject);
-      expect(findStub).to.have.been.calledOnceWithExactly(
-        sampleProject.author._id
-      );
-      expect(saveStub).to.have.been.calledOn(
-        sinon.match.has(
-          "projects",
-          sinon.match.array.deepEquals([1, 2, 3, sampleProject._id])
-        )
-      );
-    });
-    it("Should remove the project in the author projects array on delete", async () => {
-      sinon.reset();
-      class fakeArrayClass extends Array {
-        constructor() {
-          super();
-          this.pull = pullStub;
+    context("On delete", () => {
+      beforeEach(() => {
+        //Add a pull method to the arrays
+        class fakeArrayClass extends Array {
+          constructor() {
+            super();
+            this.pull = pullStub;
+          }
         }
-      }
-      sampleUser = {
-        projects: new fakeArrayClass(1, 2, sampleProject._id),
-        save: saveStub,
-      };
-      findStub.resolves(sampleUser);
+        sampleProjectAuthor.projects = new fakeArrayClass(
+          1,
+          2,
+          sampleProject._id
+        );
+      });
+      it("Should remove the project in the author projects array on delete", async () => {
+        await postDelete(sampleProject);
 
-      await postDelete(sampleProject);
+        expect(findStub).to.have.been.calledOnceWithExactly(
+          sampleProject.author._id
+        );
+        expect(pullStub).to.have.been.calledOnceWithExactly(sampleProject._id);
+      });
 
-      expect(findStub).to.have.been.calledOnceWithExactly(
-        sampleProject.author._id
-      );
-      expect(pullStub).to.have.been.calledWithExactly(sampleProject._id);
-    });
-    it("Should delete all the issues related to the project", async () => {
-      await postDelete(sampleProject);
+      it("Should delete all the issues related to the project", async () => {
+        await postDelete(sampleProject);
 
-      expect(deleteStub).to.have.been.calledOnceWithExactly({
-        author: sampleProject.author._id,
+        expect(deleteStub.callCount).to.eq(sampleProject.issues.length);
+        expect(deleteStub).to.have.been.calledWith(
+          sinon.match.in(sampleProject.issues)
+        );
       });
     });
   });

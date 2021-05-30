@@ -24,7 +24,7 @@ function postSave(project) {
 
 ProjectSchema.post("save", postSave);
 
-function postDelete(project) {
+async function postDelete(project) {
   const authorId = project.author._id;
   const projectId = project._id;
   User.findById(authorId).then((user) => {
@@ -32,8 +32,13 @@ function postDelete(project) {
     user.save();
   });
 
-  // Find the issues associated and remove them
-  Issue.deleteMany({ author: authorId });
+  // Find the issues associated and remove them from their authors in parallel
+  await Promise.all(
+    project.issues.map(async (issueId) => {
+      // Delete the issue, and trigger the issue middleware
+      await Issue.findByIdAndDelete(issueId);
+    })
+  );
 }
 ProjectSchema.post("findByIdAndDelete", postDelete);
 

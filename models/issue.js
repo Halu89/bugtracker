@@ -51,7 +51,6 @@ function postDelete(issue) {
 }
 IssueSchema.post("findOneAndDelete", postDelete);
 
-//TODO : Add a deletemany hook when we delete a project to remove self from the users
 
 let Issue;
 // Get the model or create it if not registered

@@ -9,17 +9,9 @@ chai.use(chaiAsPromised);
 
 const mongoose = require("mongoose");
 var User = rewire("./user");
+const { sampleUser } = require("../utils/tests/sampleData");
 
 describe("User model", () => {
-  let id1 = new mongoose.Types.ObjectId();
-  let id2 = new mongoose.Types.ObjectId();
-  let id3 = new mongoose.Types.ObjectId();
-  let sampleUser = {
-    email: "foo@bar.com",
-    username: "foo",
-    issues: [id1, id2],
-    projects: [id3],
-  };
   it("Should return an error if email missing", () => {
     let user = new User();
 

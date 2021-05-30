@@ -17,6 +17,12 @@ UserSchema.statics.findOneAndAuth = async function (username, password) {
   return this.authenticate()(username, password);
 };
 
-const User = mongoose.model("User", UserSchema);
+let User;
+// Get the model or create it if not registered
+try {
+  User = mongoose.model("User");
+} catch (e) {
+  User = mongoose.model("User", UserSchema);
+}
 
 module.exports = User;

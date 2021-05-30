@@ -10,36 +10,13 @@ chai.use(chaiAsPromised);
 const mongoose = require("mongoose");
 var Issue = rewire("./issue");
 
+const {
+  sampleProject,
+  sampleIssue,
+  sampleUser,
+} = require("../utils/tests/sampleData");
+
 describe("Issue Model", () => {
-  let id1 = new mongoose.Types.ObjectId();
-  let id2 = new mongoose.Types.ObjectId();
-  let id3 = new mongoose.Types.ObjectId();
-  let id4 = new mongoose.Types.ObjectId();
-  let id5 = new mongoose.Types.ObjectId();
-  let id6 = new mongoose.Types.ObjectId();
-  const sampleIssue = {
-    _id: id4,
-    title: "foo",
-    description: "fake_description",
-    project: id5,
-    author: id2,
-    assignedTo: [id6],
-    statusText: "fake_status",
-  };
-  const sampleProject = {
-    _id: id5,
-    name: "foo",
-    description: "fake_description",
-    author: id2,
-    issues: [id3, id4, id1],
-  };
-  let sampleUser = {
-    _id: id2,
-    email: "foo@bar.com",
-    username: "foo",
-    issues: [id1, id4],
-    projects: [id5],
-  };
   context("Basic fields", () => {
     it("Should return error if required areas are missing", (done) => {
       let issue = new Issue();

@@ -1,0 +1,9 @@
+// Mocha config file
+
+{
+  "exclude": [
+    "./utils/middleware.test.js",
+    "./routes/auth.test.js",
+    "./routes/issues.test.js"
+  ]
+}

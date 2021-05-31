@@ -60,7 +60,7 @@ describe("Issue Model", () => {
     const postSave = Issue.__get__("postSave");
     const postDelete = Issue.__get__("postDelete");
 
-    beforeEach(() => {      
+    beforeEach(() => {
       userSaveStub = sinon.stub();
       projectSaveStub = sinon.stub();
 
@@ -72,9 +72,9 @@ describe("Issue Model", () => {
       // Second call on the project
       findStub.onCall(1).resolves(sampleProject);
     });
-    afterEach(()=>{
+    afterEach(() => {
       sinon.restore();
-    })
+    });
     context("postSave", () => {
       it("Should add the issue to the related author field on save", async () => {
         //Save a copy of the user issues
@@ -138,6 +138,9 @@ describe("Issue Model", () => {
         expect(pullStub.getCall(0)).to.have.been.calledWith(sampleIssue._id);
         // Can't verify the user object without re implementing the MongooseArray.prototype.pull method
         // https://mongoosejs.com/docs/api.html#mongoosearray_MongooseArray-pull
+      });
+      it("Should throw if no issue was found", () => {
+        expect(() => postDelete()).to.throw;
       });
       it("Should remove the issue to the related project", async () => {
         await postDelete(sampleIssue);

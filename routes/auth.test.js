@@ -18,7 +18,7 @@ var catchAsync = rewire("../utils/catchAsync");
 app.use("/", authRoutes);
 var sandbox = sinon.createSandbox();
 
-describe("Auth routes", () => {
+describe.skip("Auth routes", () => {
   let catchStub;
   let signUpStub;
   beforeEach(() => {
@@ -31,9 +31,9 @@ describe("Auth routes", () => {
   // afterEach(() => {});
 
   context("POST /signup", () => {
-    it.only("should get a passing test");
+    it.skip("should get a passing test");
 
-    it("should be ok", (done) => {
+    it.skip("should be ok", (done) => {
       chai
         .request(app)
         .post("/signup")

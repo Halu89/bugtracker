@@ -34,8 +34,8 @@ exports.signUp = async function (req, res, next) {
     res.status(200).json({ token });
   } catch (e) {
     if (e.code === 11000) {
-      e.message = "Username or email already taken"; //Replace the default mongoose duplicate field error message
-      return next(e);
+      //Replace the default mongoose duplicate field error message
+      return next(new ExpressError("Username or email already taken", 400));
     }
     next(e);
   }

@@ -149,15 +149,8 @@ describe("Issues controllers", () => {
       expect(result).to.be.equal("fake_json");
     });
     it("Should pass an error if issue not found", async () => {
-      sandbox.restore();
-      next = sandbox.stub();
-      mockQuery = {};
-      populateStub = sandbox.stub().onFirstCall().returns(mockQuery);
-      populateStub.onSecondCall().resolves(null); //Issue not found
-      mockQuery.populate = populateStub;
-      findByIdStub = sandbox
-        .stub(mongoose.Model, "findById")
-        .returns({ populate: populateStub });
+      sandbox.resetHistory();
+      populateStub.onSecondCall().resolves(null); // No issue found
 
       await issues.show(req, res, next);
       expect(next).to.have.been.calledOnce;

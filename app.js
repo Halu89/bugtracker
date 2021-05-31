@@ -40,7 +40,6 @@ app.all("*", (req, res, next) => {
 
 app.use((err, req, res, next) => {
   const { statusCode = 500, message, stack, originalError } = err;
-  console.log(err);
   if (process.env.NODE_ENV !== "dev") err.stack = "Private";
   if (!err.message) err.message = "Oh No, Something went wrong !";
   res.status(statusCode).json({ statusCode, message, stack, originalError });

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "test": "mocha './{,!(node_modules)/**}/*.test.js'",
-    "coverage": "nyc --reporter=html npm run test"
+    "coverage": "nyc --reporter=html --reporter=text npm run test"
   },
   "keywords": [],
   "author": "Corentin Briand",

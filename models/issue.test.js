@@ -60,8 +60,7 @@ describe("Issue Model", () => {
     const postSave = Issue.__get__("postSave");
     const postDelete = Issue.__get__("postDelete");
 
-    beforeEach(() => {
-      sinon.restore();
+    beforeEach(() => {      
       userSaveStub = sinon.stub();
       projectSaveStub = sinon.stub();
 
@@ -73,6 +72,9 @@ describe("Issue Model", () => {
       // Second call on the project
       findStub.onCall(1).resolves(sampleProject);
     });
+    afterEach(()=>{
+      sinon.restore();
+    })
     context("postSave", () => {
       it("Should add the issue to the related author field on save", async () => {
         //Save a copy of the user issues

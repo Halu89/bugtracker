@@ -17,24 +17,26 @@ describe("Issues controllers", () => {
   let req, res, jsonStub, findStub, populateStub;
   let findByIdStub;
   beforeEach(() => {
-    sandbox.restore();
     req = {
       params: {
         project: { name: "foo", id: 123 },
         id: 1234,
       },
       body: {
-        issue: { name: "bar", status: "open", description: "fake_description" },
+        title: "bar",
+        statusText: "Work in progress",
+        description: "fake_description",
       },
       user: { id: 123, name: "baz" },
     };
     jsonStub = sandbox.stub().returns("fake_json");
-    res = { json: jsonStub }; //persists through restores ?
+    res = { json: jsonStub, status: () => res }; //persists through restores ?
   });
-
+  afterEach(() => {
+    sandbox.restore();
+  });
   context("Index", () => {
     beforeEach(() => {
-      sandbox.restore();
       populateStub = sandbox
         .stub(mongoose.Query.prototype, "populate")
         .resolves("fake_issue");
@@ -42,7 +44,9 @@ describe("Issues controllers", () => {
         .stub(mongoose.Model, "find")
         .returns({ populate: populateStub });
     });
-
+    afterEach(() => {
+      sandbox.restore();
+    });
     it("Should call the database for all the project matching issues", async () => {
       await issues.index(req, res);
       expect(findStub).to.have.been.calledOnceWithExactly({
@@ -80,7 +84,9 @@ describe("Issues controllers", () => {
     it("Should create a new issue", () => {
       expect(FakeIssueModel).to.have.been.calledWithNew;
       expect(FakeIssueModel).to.have.been.calledOnceWithExactly({
-        ...req.body.issue,
+        title: req.body.title,
+        statusText: req.body.statusText,
+        description: req.body.description,
         author: req.user.id,
         project: req.params.project,
       });
@@ -95,9 +101,8 @@ describe("Issues controllers", () => {
   });
 
   context("Show", () => {
-    let result;
+    let result, populateStub, findByIdStub;
     beforeEach(async () => {
-      sandbox.restore();
       populateStub = sandbox
         .stub(mongoose.Query.prototype, "populate")
         .resolves("fake_issue");
@@ -106,6 +111,9 @@ describe("Issues controllers", () => {
         .returns({ populate: populateStub });
 
       result = await issues.show(req, res);
+    });
+    afterEach(() => {
+      sandbox.restore();
     });
     it("Should get the id from the params", async () => {
       expect(findByIdStub).to.have.been.calledOnceWithExactly(req.params.id);
@@ -132,11 +140,13 @@ describe("Issues controllers", () => {
   context("Update", () => {
     let result;
     beforeEach(async () => {
-      sandbox.restore();
       updateStub = sandbox
         .stub(mongoose.Model, "findByIdAndUpdate")
         .resolves("edited_issue");
       result = await issues.update(req, res);
+    });
+    afterEach(() => {
+      sandbox.restore();
     });
     it("Should call the db with the right arguments", async () => {
       expect(updateStub).to.have.been.calledOnceWithExactly(
@@ -160,13 +170,14 @@ describe("Issues controllers", () => {
   context("Destroy", () => {
     let result;
     beforeEach(async () => {
-      sandbox.restore();
-
       deleteStub = sandbox
         .stub(mongoose.Model, "findByIdAndDelete")
         .resolves("fake_deleted");
 
       result = await issues.destroy(req, res);
+    });
+    afterEach(() => {
+      sandbox.restore();
     });
     it("Should get the id from the params", async () => {
       expect(deleteStub).to.have.been.calledOnceWithExactly(req.params.id);

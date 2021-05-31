@@ -27,7 +27,7 @@ describe("Auth controllers", () => {
       },
     };
     jsonStub = sandbox.stub().returns("fake_json");
-    res = { json: jsonStub };
+    res = { json: jsonStub, status: () => res };
     sampleUser = { _id: 123, username: "foo", id: 123 };
     next = sandbox.stub();
   });

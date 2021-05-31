@@ -42,7 +42,7 @@ describe("Project Model", () => {
     });
   });
   context("Middleware", () => {
-    let saveStub, findStub, pullStub, sampleProjectAuthor;
+    let saveStub, pullStub, sampleProjectAuthor, deleteStub, findStub;
     const postSave = Project.__get__("postSave");
     const postDelete = Project.__get__("postDelete");
 
@@ -55,7 +55,9 @@ describe("Project Model", () => {
         .stub(mongoose.Model, "findById")
         .resolves(sampleProjectAuthor);
     });
-    afterEach(() => sandbox.restore());
+    afterEach(() => {
+      sandbox.restore();
+    });
     context("On save", () => {
       it("Should add the project to the related author field on save", async () => {
         const preSave = [...sampleProjectAuthor.projects];

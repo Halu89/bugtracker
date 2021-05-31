@@ -3,10 +3,9 @@ const ExpressError = require("../utils/ExpressError");
 
 const index = async (req, res, _next) => {
   const { project } = req.params;
-  const issue = await Issue.find({ project }).populate("author", [
-    "username",
-    "email",
-  ]).populate("project", "name");
+  const issue = await Issue.find({ project })
+    .populate("author", ["username", "email"])
+    .populate("project", "name");
   return res.status(200).json(issue);
 };
 

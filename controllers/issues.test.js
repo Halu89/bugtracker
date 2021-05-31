@@ -14,13 +14,12 @@ let issues = rewire("./issues");
 let sandbox = sinon.createSandbox();
 
 describe("Issues controllers", () => {
-  let req, res, jsonStub, findStub, populateStub;
+  let req, res, next, jsonStub, findStub, populateStub;
   let findByIdStub;
   beforeEach(() => {
     req = {
       params: {
-        project: { name: "foo", id: 123 },
-        id: 1234,
+        project: new mongoose.Types.ObjectId(),
       },
       body: {
         title: "bar",
@@ -36,10 +35,15 @@ describe("Issues controllers", () => {
     sandbox.restore();
   });
   context("Index", () => {
+    let mockQuery;
     beforeEach(() => {
-      populateStub = sandbox
-        .stub(mongoose.Query.prototype, "populate")
-        .resolves("fake_issue");
+      next = sandbox.stub();
+
+      mockQuery = {};
+      populateStub = sandbox.stub().onFirstCall().returns(mockQuery);
+      populateStub.onSecondCall().resolves("fake_issue");
+      mockQuery.populate = populateStub;
+
       findStub = sandbox
         .stub(mongoose.Model, "find")
         .returns({ populate: populateStub });
@@ -55,10 +59,17 @@ describe("Issues controllers", () => {
     });
     it("Should populate the author username and email", async () => {
       await issues.index(req, res);
-      expect(populateStub).to.have.been.calledOnceWithExactly("author", [
+      expect(populateStub.getCall(0)).to.have.been.calledWithExactly("author", [
         "username",
         "email",
       ]);
+    });
+    it("Should populate the project name", async () => {
+      await issues.index(req, res);
+      expect(populateStub.getCall(1)).to.have.been.calledWithExactly(
+        "project",
+        "name"
+      );
     });
     it("Should send a json back", async () => {
       const result = await issues.index(req, res);
@@ -102,15 +113,18 @@ describe("Issues controllers", () => {
 
   context("Show", () => {
     let result, populateStub, findByIdStub;
+    let mockQuery;
     beforeEach(async () => {
-      populateStub = sandbox
-        .stub(mongoose.Query.prototype, "populate")
-        .resolves("fake_issue");
+      next = sandbox.stub();
+      mockQuery = {};
+      populateStub = sandbox.stub().onFirstCall().returns(mockQuery);
+      populateStub.onSecondCall().resolves("fake_issue");
+      mockQuery.populate = populateStub;
       findByIdStub = sandbox
         .stub(mongoose.Model, "findById")
         .returns({ populate: populateStub });
 
-      result = await issues.show(req, res);
+      result = await issues.show(req, res, next);
     });
     afterEach(() => {
       sandbox.restore();
@@ -119,18 +133,31 @@ describe("Issues controllers", () => {
       expect(findByIdStub).to.have.been.calledOnceWithExactly(req.params.id);
     });
     it("Should populate the author username and email fields", () => {
-      expect(populateStub).to.have.been.calledOnceWithExactly("author", [
+      expect(populateStub.getCall(0)).to.have.been.calledWithExactly("author", [
         "username",
         "email",
       ]);
+    });
+    it("Should populate the project name", () => {
+      expect(populateStub.getCall(1)).to.have.been.calledWithExactly(
+        "project",
+        "name"
+      );
     });
     it("Should return a json", () => {
       expect(jsonStub).to.have.been.calledOnceWithExactly("fake_issue");
       expect(result).to.be.equal("fake_json");
     });
     it("Should pass an error if issue not found", async () => {
-      populateStub.resolves(null);
-      const next = sandbox.stub();
+      sandbox.restore();
+      next = sandbox.stub();
+      mockQuery = {};
+      populateStub = sandbox.stub().onFirstCall().returns(mockQuery);
+      populateStub.onSecondCall().resolves(null); //Issue not found
+      mockQuery.populate = populateStub;
+      findByIdStub = sandbox
+        .stub(mongoose.Model, "findById")
+        .returns({ populate: populateStub });
 
       await issues.show(req, res, next);
       expect(next).to.have.been.calledOnce;
@@ -151,8 +178,7 @@ describe("Issues controllers", () => {
     it("Should call the db with the right arguments", async () => {
       expect(updateStub).to.have.been.calledOnceWithExactly(
         req.params.id,
-        req.body.issue,
-        { new: true }
+        req.body.issue
       );
     });
     it("Should send back a json", () => {

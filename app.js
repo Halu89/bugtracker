@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv-safe").config();
 
 const express = require("express");
 const morgan = require("morgan");
@@ -6,6 +6,7 @@ const path = require("path");
 const app = express();
 
 app.use(express.static(path.join(__dirname, "views")));
+app.use(express.json())
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("tiny"));
 
@@ -15,16 +16,21 @@ const ExpressError = require("./utils/ExpressError");
 const { ensureAuth } = require("./utils/middleware");
 const issueRouter = require("./routes/issues");
 const authRouter = require("./routes/auth");
+const projectsRouter = require("./routes/projects");
 
-// Routes
+// Routes (order is important)
 app.get("/", (req, res) => res.sendFile("index"));
-
-app.use("/projects/:project", ensureAuth(), issueRouter); // TODO : Ensure correct user
 app.use("/auth", authRouter);
+
+
+app.use("/projects", ensureAuth()) // Ensure authentication and adds a req.user to all "/projects/*" requests
+app.use("/projects", projectsRouter)
+
+app.use("/projects/:project", issueRouter); // TODO : Ensure correct user
 
 app.get("/protected", ensureAuth(), (req, res) => {
   console.log(req.user);
-  res.send("You got to the secret page");
+  res.json(req.user);
 });
 
 // ERROR HANDLING

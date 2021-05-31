@@ -7,19 +7,22 @@ const index = async (req, res, _next) => {
     "username",
     "email",
   ]);
-  return res.json(issue);
+  return res.status(200).json(issue);
 };
 
 const create = async (req, res, _next) => {
   const { project } = req.params;
+  const { title, statusText, description } = req.body;
   const newIssue = new Issue({
-    ...req.body.issue,
-    project, // TODO: get an id from the database and store the project as an id instead of a string, and update the project to add the issue
+    title,
+    statusText,
+    description,
+    project,
     author: req.user.id, // Extract the user from object added by passport
   });
   await newIssue.save();
 
-  return res.json(newIssue);
+  return res.status(201).json(newIssue);
 };
 
 const show = async (req, res, next) => {
@@ -30,7 +33,7 @@ const show = async (req, res, next) => {
   ]);
   if (!issue) return next(new ExpressError("Issue not found", 404));
 
-  return res.json(issue);
+  return res.status(200).json(issue);
 };
 
 const update = async (req, res, next) => {
@@ -40,14 +43,14 @@ const update = async (req, res, next) => {
   const edited = await Issue.findByIdAndUpdate(id, update, { new: true });
   if (!edited) return next(new ExpressError("Issue not found", 404));
 
-  return res.json(edited);
+  return res.status(200).json(edited);
 };
 
 const destroy = async (req, res, next) => {
   const { project, id } = req.params;
   const deleted = await Issue.findByIdAndDelete(id);
   if (!deleted) return next(new ExpressError("Issue not found", 404));
-  return res.json({ success: true });
+  return res.status(200).json({ success: true });
 };
 
 module.exports = {

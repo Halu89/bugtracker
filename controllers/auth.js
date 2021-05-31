@@ -15,7 +15,7 @@ exports.signIn = async function (req, res, next) {
   const token = jwt.sign({ id: user._id, username }, JWT_SECRET, {
     expiresIn: "14d",
   });
-  return res.json({ token });
+  return res.status(200).json({ token });
 };
 
 exports.signUp = async function (req, res, next) {
@@ -31,7 +31,7 @@ exports.signUp = async function (req, res, next) {
     const token = jwt.sign({ id, username }, JWT_SECRET, {
       expiresIn: "14d",
     });
-    res.json({ token });
+    res.status(200).json({ token });
   } catch (e) {
     if (e.code === 11000) {
       e.message = "Username or email already taken"; //Replace the default mongoose duplicate field error message

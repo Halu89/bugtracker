@@ -13,10 +13,12 @@
     - [x] on findByIdAndDelete
       - [x] For the users
       - [x] For the issues
+- [ ] Create Project routes and controllers
+- [ ] Add verify author/admin middlewares to the routes
+- [ ] Add documentation
 
 - [ ] Add possibility to add/remove users from projects
 - [ ] Add possibility to assign/remove users from issues
 
-- [ ] Add verify author/admin middlewares to the routes
 
 - [x] Unit tests

@@ -25,6 +25,7 @@ mongoose.set("debug", function (collectionName, methodName, ...methodArgs) {
   const args = methodArgs.map((arg) => JSON.stringify(arg)).join(", ");
   console.log(`Mongoose: ${collectionName}.${methodName}(${args})`);
 });
+mongoose.set("returnOriginal", false);
 
 // mongoose.set("debug", true)
 module.exports = { Issue, User, Project };

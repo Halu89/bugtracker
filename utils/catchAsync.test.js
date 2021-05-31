@@ -6,19 +6,23 @@ const sinonChai = require("sinon-chai");
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 
-const catchAsync = require("./catchAsync");
+const rewire = require("rewire");
+const catchAsync = rewire("./catchAsync");
 let sandbox = sinon.createSandbox();
 
 describe("catchAsync", () => {
-  let stub;
+  let stub, nextStub;
   const req = "fake_request";
   const res = "fake_response";
-  const next = "fake_callback";
+  const err = new Error("fake_error");
   beforeEach(() => {
-    sandbox.restore();
     stub = sandbox.stub().resolves("some value");
+    nextStub = sandbox.stub();
   });
 
+  afterEach(() => {
+    sandbox.restore();
+  });
   it("Should accept a function", async () => {
     const newFunc = catchAsync(stub);
 
@@ -28,14 +32,39 @@ describe("catchAsync", () => {
   it("Should pass arguments to the function and call it", async () => {
     const newFunc = catchAsync(stub);
     expect(stub).to.not.have.been.called;
-    await expect(newFunc(req, res, next)).to.eventually.be.equal("some value");
-    expect(stub).to.have.been.calledOnceWithExactly(req, res, next);
+    await expect(newFunc(req, res, nextStub)).to.eventually.be.equal(
+      "some value"
+    );
+    expect(stub).to.have.been.calledOnceWithExactly(req, res, nextStub);
   });
   it("Should catch async errors", async () => {
-    stub = sandbox.stub().rejects(new Error("fake_error"));
+    stub = sandbox.stub().rejects(err);
     const newFunc = catchAsync(stub);
+    await newFunc(req, res, nextStub);
 
-    await expect(newFunc(req,res,next)).to.be.rejectedWith("fake_error");
+    expect(nextStub).to.have.been.calledWith(err);
     expect(stub).to.have.been.calledOnce;
+  });
+  context("Mongoose intercept", () => {
+    const interceptMongoose = catchAsync.__get__("interceptMongoose");
+    let e;
+    beforeEach(() => {
+      next = sandbox.stub();
+      e = { path: "foo", kind: "ObjectId"};
+    });
+    it("Should not call next if e.kind is not ObjectId", () => {
+      e.kind = null;
+      interceptMongoose(e, next);
+      expect(next).to.not.have.been.called;
+    });
+    it("Should interceptMongoose errors", () => {
+      interceptMongoose(e, next);
+      expect(next.lastCall.firstArg).to.be.an("error");
+      expect(next.lastCall.firstArg.message).to.equal("Foo not found");
+      
+      e.path = null
+      interceptMongoose(e,next)
+      expect(next.lastCall.firstArg.message).to.equal("Document not found");
+    });
   });
 });

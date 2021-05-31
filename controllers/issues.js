@@ -6,7 +6,7 @@ const index = async (req, res, _next) => {
   const issue = await Issue.find({ project }).populate("author", [
     "username",
     "email",
-  ]);
+  ]).populate("project", "name");
   return res.status(200).json(issue);
 };
 
@@ -27,10 +27,9 @@ const create = async (req, res, _next) => {
 
 const show = async (req, res, next) => {
   const { id } = req.params;
-  const issue = await Issue.findById(id).populate("author", [
-    "username",
-    "email",
-  ]);
+  const issue = await Issue.findById(id)
+    .populate("author", ["username", "email"])
+    .populate("project", "name");
   if (!issue) return next(new ExpressError("Issue not found", 404));
 
   return res.status(200).json(issue);
@@ -40,7 +39,7 @@ const update = async (req, res, next) => {
   const { id } = req.params;
   const update = req.body.issue;
 
-  const edited = await Issue.findByIdAndUpdate(id, update, { new: true });
+  const edited = await Issue.findByIdAndUpdate(id, update);
   if (!edited) return next(new ExpressError("Issue not found", 404));
 
   return res.status(200).json(edited);

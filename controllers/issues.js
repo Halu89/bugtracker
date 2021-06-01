@@ -57,8 +57,10 @@ const destroy = async (req, res, next) => {
     await Issue.findByIdAndDelete(id);
     return res.status(200).json({ success: true });
   } catch (error) {
-    if (error.message === "Document not found");
-    return next(new ExpressError("Issue not found", 404));
+    if (error.message === "Document not found") {
+      return next(new ExpressError("Issue not found", 404));
+    }
+    next(error);
   }
 };
 

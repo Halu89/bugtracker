@@ -221,7 +221,7 @@ describe("Issues controllers", () => {
       expect(result).to.be.equal("fake_json");
     });
     it("Should pass an error if issue not found", async () => {
-      deleteStub.resolves(null);
+      deleteStub.throws(new Error("Document not found"));
       const next = sandbox.stub();
 
       await issues.destroy(req, res, next);

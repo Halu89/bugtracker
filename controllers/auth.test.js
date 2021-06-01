@@ -129,13 +129,11 @@ describe("Auth controllers", () => {
       });
     });
     it("Should replace the default mongoose duplicate error", async () => {
-      saveStub.throws({ code: 11000, message: "fake_message" });
+      const err = new ExpressError("Username or email already taken", 400);
+      saveStub.throws(err);
       await authControllers.signUp(req, res, next);
 
-      expect(next).to.have.been.calledOnceWithExactly({
-        code: 11000,
-        message: "Username or email already taken",
-      });
+      expect(next).to.have.been.calledOnceWithExactly(err);
     });
   });
 });

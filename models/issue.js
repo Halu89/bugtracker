@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const User = require("./user");
-const Project = require("./project");
 
 const IssueSchema = new Schema(
   {
@@ -26,6 +25,7 @@ function postSave(issue) {
     user.issues.push(issueId);
     user.save();
   });
+  const Project = mongoose.model("Project");
   Project.findById(issue.project._id).then((project) => {
     project.issues.push(issueId);
     project.save();
@@ -44,13 +44,14 @@ function postDelete(issue) {
   });
 
   // Find the project associated and delete in array
+  const Project = mongoose.model("Project");
   Project.findById(issue.project._id).then((project) => {
+    if (!project) return;
     project.issues.pull(issueId);
     project.save();
   });
 }
 IssueSchema.post("findOneAndDelete", postDelete);
-
 
 let Issue;
 // Get the model or create it if not registered

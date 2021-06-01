@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
-const Issue = require("./issue");
 const User = require("./user");
+const Issue = require("./issue");
 const Project = require("./project");
 
 const DB_URI =

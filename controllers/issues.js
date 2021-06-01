@@ -1,17 +1,21 @@
 const Issue = require("../models/issue");
+const Project = require("../models/project");
 const ExpressError = require("../utils/ExpressError");
 
 const index = async (req, res, _next) => {
   const { projectId } = req.params;
-  const issue = await Issue.find({ projectId })
+  const issue = await Issue.find({ project: projectId })
     .populate("author", ["username", "email"])
     .populate("project", "name");
   return res.status(200).json(issue);
 };
 
-const create = async (req, res, _next) => {
+const create = async (req, res, next) => {
   const { projectId } = req.params;
   const { title, statusText, description } = req.body;
+  const project = await Project.findById(projectId);
+  if (!project) return next(new ExpressError("Project not found", 404));
+  
   const newIssue = new Issue({
     title,
     statusText,
@@ -36,7 +40,7 @@ const show = async (req, res, next) => {
 
 const update = async (req, res, next) => {
   const { id } = req.params;
-  const update = req.body.issue;
+  const update = req.body;
 
   const edited = await Issue.findByIdAndUpdate(id, update);
   if (!edited) return next(new ExpressError("Issue not found", 404));

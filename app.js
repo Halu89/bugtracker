@@ -25,7 +25,7 @@ app.use("/auth", authRouter);
 app.use("/projects", ensureAuth()); // Ensure authentication and adds a req.user to all "/projects/*" requests
 app.use("/projects", projectsRouter);
 
-app.use("/projects/:project", issueRouter); // TODO : Ensure correct user
+app.use("/projects/:projectId", issueRouter); // TODO : Ensure correct user
 
 app.get("/protected", ensureAuth(), (req, res) => {
   console.log(req.user);

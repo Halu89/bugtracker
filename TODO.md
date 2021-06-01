@@ -13,7 +13,7 @@
     - [x] on findByIdAndDelete
       - [x] For the users
       - [x] For the issues
-- [ ] Create Project routes and controllers
+- [x] Create Project routes and controllers
 - [ ] Add verify author/admin middlewares to the routes
 - [ ] Add documentation
 

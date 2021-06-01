@@ -2,21 +2,21 @@ const Issue = require("../models/issue");
 const ExpressError = require("../utils/ExpressError");
 
 const index = async (req, res, _next) => {
-  const { project } = req.params;
-  const issue = await Issue.find({ project })
+  const { projectId } = req.params;
+  const issue = await Issue.find({ projectId })
     .populate("author", ["username", "email"])
     .populate("project", "name");
   return res.status(200).json(issue);
 };
 
 const create = async (req, res, _next) => {
-  const { project } = req.params;
+  const { projectId } = req.params;
   const { title, statusText, description } = req.body;
   const newIssue = new Issue({
     title,
     statusText,
     description,
-    project,
+    project: projectId,
     author: req.user.id, // Extract the user from object added by passport
   });
   await newIssue.save();
@@ -47,7 +47,7 @@ const update = async (req, res, next) => {
 const destroy = async (req, res, next) => {
   const { project, id } = req.params;
   const deleted = await Issue.findByIdAndDelete(id);
-  if (!deleted) return next(new ExpressError("Issue not found", 404));
+  if (!deleted) return next(new ExpressError("Issue not found", 404)); //TODO findbyidanddelete throws with a 500 if no document is found
   return res.status(200).json({ success: true });
 };
 

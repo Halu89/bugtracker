@@ -9,6 +9,8 @@ const ProjectSchema = new Schema(
     description: { type: String, required: true },
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     issues: [{ type: Schema.Types.ObjectId, ref: "Issue" }],
+    team: [{ type: Schema.Types.ObjectId, ref: "User" }],
+    admins: [{ type: Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );
@@ -17,6 +19,9 @@ function postSave(project) {
   const authorId = project.author._id;
   const projectId = project._id;
   User.findById(authorId).then((user) => {
+    //Don't add the project to the user if it's already here
+    if (user.projects.includes(projectId)) return;
+
     user.projects.push(projectId);
     user.save();
   });

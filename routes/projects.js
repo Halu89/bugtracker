@@ -3,13 +3,15 @@ const router = express.Router();
 
 const catchAsync = require("../utils/catchAsync");
 const projects = require("../controllers/projects");
+const { ensureAdmin } = require("../utils/middleware");
 
+//View all the users project
 router.get("/", catchAsync(projects.index));
 
 router.post("/", catchAsync(projects.create));
 
-router.put("/:projectId", catchAsync(projects.update));
-
-router.delete("/:projectId", catchAsync(projects.destroy));
+//Need admin to update or delete the project
+router.put("/:projectId", ensureAdmin, catchAsync(projects.update));
+router.delete("/:projectId", ensureAdmin, catchAsync(projects.destroy));
 
 module.exports = router;

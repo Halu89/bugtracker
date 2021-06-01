@@ -19,7 +19,7 @@
 - [x] Test that a project exists before creating an issue on it
 - [x] Add documentation
 
-- [ ] Add authorization middlewares to the routes
+- [x] Add authorization middlewares to the routes
 
 - [ ] Add possibility to add/remove users from projects
 - [ ] Add possibility to assign/remove users from issues

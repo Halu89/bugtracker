@@ -1,8 +1,7 @@
 require("dotenv").config;
 const passport = require("passport");
 const User = require("../models/user");
-const Project = require("../models/project");
-
+const mongoose = require("mongoose");
 // AUTH CONFIG
 
 const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt"),
@@ -30,10 +29,12 @@ exports.ensureMember = async (req, res, next) => {
 
   const projectId = req.params.projectId;
   try {
+    // Import here to avoid circular dependency issue
+    const Project = mongoose.model("Project");
+
     const proj = await Project.findById(projectId);
     if (!proj) return next(new ExpressError("Not found", 404));
-    // console.log(proj.author._id.equals(userId));
-    
+
     // Verify that the user is a team member
     if (
       proj.team.includes(userId) ||
@@ -52,6 +53,8 @@ exports.ensureAdmin = async (req, res, next) => {
   //Look at the user and the project
   const userId = req.user._id;
   const projectId = req.params.projectId;
+  const Project = mongoose.model("Project");
+
   // Verify that the user is the author or an admin of the project
   const proj = await Project.findById(projectId);
   if (proj.admins.includes(userId) || proj.author._id.equals(userId)) {

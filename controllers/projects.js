@@ -31,7 +31,7 @@ const update = async (req, res, next) => {
     name,
     description,
   });
-  
+
   if (!updatedProject) return next(new ExpressError("Project not found", 404));
 
   res.status(200).json(updatedProject);
@@ -40,7 +40,6 @@ const update = async (req, res, next) => {
 const destroy = async (req, res, next) => {
   const { projectId } = req.params;
   const deleted = await Project.findByIdAndDelete(projectId);
-
   if (!deleted) return next(new ExpressError("Project not found", 404));
 
   res.status(200).json({ success: true });

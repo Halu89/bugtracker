@@ -8,7 +8,7 @@ chai.use(chaiAsPromised);
 const rewire = require("rewire");
 
 const mongoose = require("mongoose");
-
+const ExpressError = require("../utils/ExpressError");
 let issues = rewire("./issues");
 
 let sandbox = sinon.createSandbox();
@@ -19,7 +19,7 @@ describe("Issues controllers", () => {
   beforeEach(() => {
     req = {
       params: {
-        project: new mongoose.Types.ObjectId(),
+        projectId: new mongoose.Types.ObjectId(),
       },
       body: {
         title: "bar",
@@ -54,7 +54,7 @@ describe("Issues controllers", () => {
     it("Should call the database for all the project matching issues", async () => {
       await issues.index(req, res);
       expect(findStub).to.have.been.calledOnceWithExactly({
-        project: req.params.project,
+        project: req.params.projectId,
       });
     });
     it("Should populate the author username and email", async () => {
@@ -83,7 +83,9 @@ describe("Issues controllers", () => {
     beforeEach(async () => {
       saveStub = sandbox.stub().resolves("fake saved user");
       FakeIssueModel = sandbox.stub().returns({ save: saveStub });
-
+      findStub = sandbox
+        .stub(mongoose.Model, "findById")
+        .resolves("fake project");
       issues.__set__("Issue", FakeIssueModel);
 
       result = await issues.create(req, res);
@@ -92,6 +94,15 @@ describe("Issues controllers", () => {
       sandbox.restore();
       issues = rewire("./issues");
     });
+    it("Should check that the project from the params exists", async () => {
+      expect(findStub).to.have.been.calledWith(req.params.projectId);
+      sandbox.resetHistory();
+      findStub.resolves(null);
+      next = sandbox.stub();
+      await issues.create(req, res, next);
+      expect(next).to.have.been.calledOnce;
+      expect(next.getCall(0).firstArg).to.be.an("error");
+    });
     it("Should create a new issue", () => {
       expect(FakeIssueModel).to.have.been.calledWithNew;
       expect(FakeIssueModel).to.have.been.calledOnceWithExactly({
@@ -99,7 +110,7 @@ describe("Issues controllers", () => {
         statusText: req.body.statusText,
         description: req.body.description,
         author: req.user.id,
-        project: req.params.project,
+        project: req.params.projectId,
       });
     });
     it("Should save the issue to the database", () => {
@@ -160,6 +171,10 @@ describe("Issues controllers", () => {
   context("Update", () => {
     let result;
     beforeEach(async () => {
+      req = {
+        params: { id: new mongoose.Types.ObjectId() },
+        body: { title: "fake title", description: "fake desc" },
+      };
       updateStub = sandbox
         .stub(mongoose.Model, "findByIdAndUpdate")
         .resolves("edited_issue");
@@ -171,7 +186,7 @@ describe("Issues controllers", () => {
     it("Should call the db with the right arguments", async () => {
       expect(updateStub).to.have.been.calledOnceWithExactly(
         req.params.id,
-        req.body.issue
+        req.body
       );
     });
     it("Should send back a json", () => {

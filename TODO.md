@@ -15,13 +15,11 @@
       - [x] For the issues
 - [x] Create Project routes and controllers
 
-- [ ] Prevent creation of an issue with a null project
-- [ ] Actually delete the issues related to a project when a project is deleted
+- [x] Actually delete the issues related to a project when a project is deleted
 - [x] Test that a project exists before creating an issue on it
-- [ ]
+- [x] Add documentation
 
-- [ ] Add verify author/admin middlewares to the routes
-- [ ] Add documentation
+- [ ] Add authorization middlewares to the routes
 
 - [ ] Add possibility to add/remove users from projects
 - [ ] Add possibility to assign/remove users from issues

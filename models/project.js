@@ -45,7 +45,7 @@ async function postDelete(project) {
     })
   );
 }
-ProjectSchema.post("findByIdAndDelete", postDelete);
+ProjectSchema.post("findOneAndDelete", postDelete);
 
 let Project;
 // Get the model or create it if not registered

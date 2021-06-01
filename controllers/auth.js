@@ -5,6 +5,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.signIn = async function (req, res, next) {
   const { username, password } = req.body;
+  if (!username || !password)
+    return next(new ExpressError("Missing data", 400));
   // Find the user and compare the password with the store hash
   const { user, error } = await User.findOneAndAuth(username, password);
 
@@ -20,6 +22,9 @@ exports.signIn = async function (req, res, next) {
 
 exports.signUp = async function (req, res, next) {
   const { username, email, password } = req.body;
+  if (!username || !password || !email)
+    return next(new ExpressError("Missing data", 400));
+    
   const newUser = new User({ username, email });
 
   //Hash and salt the password

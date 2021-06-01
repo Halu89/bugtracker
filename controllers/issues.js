@@ -13,9 +13,11 @@ const index = async (req, res, _next) => {
 const create = async (req, res, next) => {
   const { projectId } = req.params;
   const { title, statusText, description } = req.body;
+  if (!title || !description)
+    return next(new ExpressError("Missing data", 400));
   const project = await Project.findById(projectId);
   if (!project) return next(new ExpressError("Project not found", 404));
-  
+
   const newIssue = new Issue({
     title,
     statusText,
@@ -41,6 +43,7 @@ const show = async (req, res, next) => {
 const update = async (req, res, next) => {
   const { id } = req.params;
   const update = req.body;
+  if (!update) return next(new ExpressError("Missing data", 400));
 
   const edited = await Issue.findByIdAndUpdate(id, update);
   if (!edited) return next(new ExpressError("Issue not found", 404));
@@ -49,10 +52,14 @@ const update = async (req, res, next) => {
 };
 
 const destroy = async (req, res, next) => {
-  const { project, id } = req.params;
-  const deleted = await Issue.findByIdAndDelete(id);
-  if (!deleted) return next(new ExpressError("Issue not found", 404)); //TODO findbyidanddelete throws with a 500 if no document is found
-  return res.status(200).json({ success: true });
+  const { id } = req.params;
+  try {
+    await Issue.findByIdAndDelete(id);
+    return res.status(200).json({ success: true });
+  } catch (error) {
+    if (error.message === "Document not found");
+    return next(new ExpressError("Issue not found", 404));
+  }
 };
 
 module.exports = {

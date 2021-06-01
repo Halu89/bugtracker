@@ -1,10 +1,9 @@
 const express = require("express");
 const router = express.Router();
+const mongoose = require("mongoose");
 
 const catchAsync = require("../utils/catchAsync");
-const User = require("../models");
 const auth = require("../controllers/auth");
-
 // Register
 router.post("/signup", catchAsync(auth.signUp));
 
@@ -13,13 +12,27 @@ router.post("/signin", catchAsync(auth.signIn));
 
 // Delete user
 if (process.env.NODE_ENV === "dev") {
-  router.delete("/deleteUser", (req, res, next) => {
+  router.delete("/deleteUser", async (req, res, next) => {
     const { username } = req.body;
-    User.findOneAndDelete({ username })
-      .then(() => {
-        return res.send(`User ${username} was deleted`);
-      })
-      .catch((e) => next(e));
+    try {
+      const User = mongoose.model("User");
+      const Project = mongoose.model("Project");
+      const Issue = mongoose.model("Issue");
+
+      const user = await User.findOne({ username });
+
+      user.issues.forEach(async (id) => {
+        await Issue.findByIdAndDelete(id);
+      });
+      user.projects.forEach(async (id) => {
+        await Project.findByIdAndDelete(id);
+      });
+      await user.remove();
+      res.status(200).send("User was deleted");
+    } catch (e) {
+      console.log(e);
+      next(e);
+    }
   });
 }
 module.exports = router;

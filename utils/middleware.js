@@ -2,6 +2,8 @@ require("dotenv").config;
 const passport = require("passport");
 const User = require("../models/user");
 const mongoose = require("mongoose");
+
+const ExpressError = require("./ExpressError");
 // AUTH CONFIG
 
 const { Strategy: JwtStrategy, ExtractJwt } = require("passport-jwt"),
@@ -57,6 +59,8 @@ exports.ensureAdmin = async (req, res, next) => {
 
   // Verify that the user is the author or an admin of the project
   const proj = await Project.findById(projectId);
+  if (!proj) return next(new ExpressError("Not found", 404));
+
   if (proj.admins.includes(userId) || proj.author._id.equals(userId)) {
     return next();
   }

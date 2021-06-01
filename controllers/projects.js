@@ -14,6 +14,7 @@ const index = async (req, res, next) => {
 
 const create = async (req, res, next) => {
   const { name, description } = req.body;
+  if (!name || !description) return next(new ExpressError("Missing data", 400));
   const author = req.user._id;
   const newProject = await Project.create({
     name,
@@ -27,6 +28,7 @@ const create = async (req, res, next) => {
 const update = async (req, res, next) => {
   const { projectId } = req.params;
   const { name, description } = req.body;
+  if (!name || !description) return next(new ExpressError("Missing data", 400));
   const updatedProject = await Project.findByIdAndUpdate(projectId, {
     name,
     description,

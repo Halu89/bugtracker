@@ -52,10 +52,6 @@ seedDb();
 
 setTimeout(() => {
   mongoose.connection.close();
+  console.log("Closing DB connection")
 }, 5 * 1000)
-  .then(() => {
-    console.log("Closing connection to db");
-  })
-  .catch((e) => {
-    console.log(e);
-  });
+  

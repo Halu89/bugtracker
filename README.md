@@ -1,4 +1,4 @@
-# Simple Books API #
+# Bugtracker API #
 
 This API allows you to create a project and manage issues and bugs
 

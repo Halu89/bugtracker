@@ -2,10 +2,11 @@ const Project = require("../models/project");
 const ExpressError = require("../utils/ExpressError");
 
 const index = async (req, res, next) => {
-  const userProjects = req.user.projects;
+  const userId = req.user._id;
   const projects = await Project.find()
-    .where("_id")
-    .in(userProjects)
+    // User is the project author or in the project team, or in the project admins
+    // {$or : [{author: userId}, {teams:userId}, {admins:userId}]}
+    .or([{ author: userId }, { team: userId }, { admins: userId }])
     .populate("author", ["username", "email"])
     .populate("issues", "title");
 

@@ -1,5 +1,3 @@
-# TODOS
-
 - [x] Create the project model, and update the issue and user models to add refs to it
 
 - [x] Add hooks to the models to propagate changes
@@ -21,7 +19,7 @@
 
 - [x] Add authorization middlewares to the routes
 
-- [ ] Add possibility to add/remove users from projects
+- [x] Add possibility to add/remove users and admins from projects
 - [ ] Add possibility to assign/remove users from issues
 
 

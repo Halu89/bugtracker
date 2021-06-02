@@ -4,11 +4,15 @@ const router = express.Router();
 const catchAsync = require("../utils/catchAsync");
 const projects = require("../controllers/projects");
 const { ensureAdmin } = require("../utils/middleware");
+const teamsRouter = require("./teams");
 
 //View all the users project
 router.get("/", catchAsync(projects.index));
 
 router.post("/", catchAsync(projects.create));
+
+//Teams management : add or remove users or admins from the project
+router.use("/:projectId", ensureAdmin, teamsRouter);
 
 //Need admin to update or delete the project
 router.put("/:projectId", ensureAdmin, catchAsync(projects.update));

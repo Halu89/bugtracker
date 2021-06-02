@@ -1,5 +1,6 @@
 const ExpressError = require("./ExpressError");
 
+/**Wrapper function to catch async errors and pass them with next() */
 const catchAsync = (func) => {
   return (req, res, next) =>
     func(req, res, next).catch((e) => {

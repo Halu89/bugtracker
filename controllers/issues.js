@@ -1,6 +1,7 @@
 const Issue = require("../models/issue");
 const Project = require("../models/project");
 const ExpressError = require("../utils/ExpressError");
+const { db, auth } = require("../utils");
 
 const index = async (req, res, _next) => {
   const { projectId } = req.params;
@@ -64,10 +65,58 @@ const destroy = async (req, res, next) => {
   }
 };
 
+const assignUser = async (req, res, next) => {
+  const user = await db.getUser(req.body.username, next);
+  const proj = await db.getProject(req.params.projectId, next);
+  //TODO proj should be from req.project
+  const issueId = req.params.id;
+
+  const issue = await Issue.findById(issueId);
+  if (!issue) {
+    return next(new ExpressError("Issue not found", 404));
+  }
+
+  if (!auth.checkPermission(user, proj, req)) {
+    // If a regular user tries to assign someone other than himself to the issue
+    return res.status(401).send("Unauthorized");
+  }
+  if (issue.assignedTo.includes(user._id)) {
+    return next(new ExpressError("User already assigned to that issue", 400));
+  }
+  issue.assignedTo.push(user._id);
+  const editedIssue = await issue.save();
+
+  return res.status(200).json(editedIssue);
+};
+
+const unassignUser = async (req, res, next) => {
+  const user = await db.getUser(req.body.username, next);
+  const proj = await db.getProject(req.params.projectId, next);
+  //TODO proj should be from req.project
+  const issueId = req.params.id;
+
+  const issue = await Issue.findById(issueId);
+  if (!issue) {
+    return next(new ExpressError("Issue not found", 404));
+  }
+
+  if (!auth.checkPermission(user, proj, req)) {
+    // If a regular user tries to assign someone other than himself to the issue
+    return res.status(401).send("Unauthorized");
+  }
+
+  issue.assignedTo.pull(user._id);
+  const editedIssue = await issue.save();
+
+  return res.status(200).json(editedIssue);
+};
+
 module.exports = {
   index,
   create,
   show,
   update,
   destroy,
+  assignUser,
+  unassignUser,
 };

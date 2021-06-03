@@ -20,6 +20,7 @@ const { ensureAuth } = require("./utils/middleware");
 const issueRouter = require("./routes/issues");
 const authRouter = require("./routes/auth");
 const projectsRouter = require("./routes/projects");
+const teamsRouter = require("./routes/teams");
 
 // Routes (order is important)
 app.get("/", (req, res) => res.sendFile("index"));
@@ -29,6 +30,9 @@ app.use("/projects", ensureAuth()); // Ensure authentication and adds a req.user
 app.use("/projects", projectsRouter);
 
 app.use("/projects/:projectId", issueRouter);
+
+//Teams management : add or remove users or admins from the project
+app.use("/projects/:projectId", teamsRouter);
 
 app.get("/protected", ensureAuth(), (req, res) => {
   console.log(req.user);

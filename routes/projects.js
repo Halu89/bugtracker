@@ -11,8 +11,7 @@ router.get("/", catchAsync(projects.index));
 
 router.post("/", catchAsync(projects.create));
 
-//Teams management : add or remove users or admins from the project
-router.use("/:projectId", ensureAdmin, teamsRouter);
+
 
 //Need admin to update or delete the project
 router.put("/:projectId", ensureAdmin, catchAsync(projects.update));

@@ -15,4 +15,7 @@ router
   .put(ensureMember, catchAsync(issues.update)) // Allow members to update status or close an issue
   .delete(ensureAdmin, catchAsync(issues.destroy));
 
+router.put("/:id/assignUser", ensureMember, catchAsync(issues.assignUser));
+router.put("/:id/unassignUser", ensureMember, catchAsync(issues.unassignUser));
+
 module.exports = router;

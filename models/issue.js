@@ -20,8 +20,12 @@ function postSave(issue) {
   const authorId = issue.author._id;
   const issueId = issue._id;
   User.findById(authorId).then((user) => {
+    //Don't add the issue if we're only saving after an assignedTo update
+    if (user.issues.includes(issueId)) return;
+    
     // Use MongooseArray method with proper change tracking
     // https://mongoosejs.com/docs/api/array.html
+    
     user.issues.push(issueId);
     user.save();
   });

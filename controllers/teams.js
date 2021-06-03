@@ -1,29 +1,5 @@
-const { model } = require("mongoose");
 const ExpressError = require("../utils/ExpressError");
-
-async function getUser(req, next) {
-  const { username } = req.body;
-  console.log(req.body);
-  console.log(username);
-  if (!username) {
-    return next(new ExpressError("Missing data", 400));
-  }
-  const User = model("User");
-  const user = await User.findOne({ username });
-  if (!user) {
-    return next(new ExpressError("User not found", 404));
-  }
-  return user;
-}
-
-async function getProject(req, next) {
-  const Project = model("Project");
-  const proj = await Project.findById(req.params.projectId);
-  if (!proj) {
-    return next(new ExpressError("Project not found", 404));
-  }
-  return proj;
-}
+const { db } = require("../utils");
 
 /**Finds a user and a project from the request and
  * adds or removes that user from the projects admins or the project team
@@ -34,8 +10,8 @@ async function getProject(req, next) {
  *@param field : Project field we should do the operation on
  */
 async function execute(req, res, next, operation, field) {
-  const user = await getUser(req, next);
-  const proj = await getProject(req, next);
+  const user = await db.getUser(req.body.username, next);
+  const proj = await db.getProject(req.params.projectId, next);
   if (operation === "push" && proj[field].includes(user._id)) {
     return next(new ExpressError(`User already in ${field}`, 400));
   }

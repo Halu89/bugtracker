@@ -12,46 +12,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("tiny"));
 app.use(helmet());
 
+require("./models"); // Connect to the database
+
+const routes = require("./routes");
+app.use("/", routes);
+
 const port = process.env.PORT || 5050;
-require("./models"); //Connect to the database
-
-const ExpressError = require("./utils/ExpressError");
-const { ensureAuth } = require("./utils/middleware");
-const issueRouter = require("./routes/issues");
-const authRouter = require("./routes/auth");
-const projectsRouter = require("./routes/projects");
-const teamsRouter = require("./routes/teams");
-
-// Routes (order is important)
-app.get("/", (req, res) => res.sendFile("index"));
-app.use("/auth", authRouter);
-
-app.use("/projects", ensureAuth()); // Ensure authentication and adds a req.user to all "/projects/*" requests
-app.use("/projects", projectsRouter);
-
-app.use("/projects/:projectId", issueRouter);
-
-//Teams management : add or remove users or admins from the project
-app.use("/projects/:projectId", teamsRouter);
-
-app.get("/protected", ensureAuth(), (req, res) => {
-  console.log(req.user);
-  res.json(req.user);
-});
-
-// ERROR HANDLING
-// 404 Route
-app.all("*", (req, res, next) => {
-  next(new ExpressError("Page Not Found " + req.path, 404));
-});
-
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message, stack, originalError } = err;
-  if (process.env.NODE_ENV === "production") err.stack = "Private";
-  if (!err.message) err.message = "Oh No, Something went wrong !";
-  res.status(statusCode).json({ statusCode, message, stack, originalError });
-});
-
 app.listen(port, () =>
   console.log(
     `App listening on port ${port}` +

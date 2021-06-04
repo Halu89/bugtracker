@@ -50,7 +50,7 @@ exports.ensureMember = async (req, res, next) => {
     const Project = mongoose.model("Project");
 
     const proj = await Project.findById(projectId);
-    if (!proj) return next(new ExpressError("Not found", 404));
+    if (!proj) return next(new ExpressError("Project not found", 404));
 
     // Add the project to the request
     req.project = proj;
@@ -69,21 +69,32 @@ exports.ensureMember = async (req, res, next) => {
 };
 
 /** Verifies that the request comes from the author of the project or an admin */
-
 exports.ensureAdmin = async (req, res, next) => {
   //Look at the user and the project
   const userId = req.user._id;
-  const projectId = req.params.projectId;
-  const Project = mongoose.model("Project");
+  let proj;
 
-  //TODO : check if a req.project exists from ensureMember() to avoid a db call. Or set it here
+  // Check if we already have the project details from the request
+  if (!req.project) {
+    const projectId = req.params.projectId;
+    const Project = mongoose.model("Project");
+    // Verify that the user is the author or an admin of the project
+    try {
+      proj = await Project.findById(projectId);
+    } catch (e) {
+      next(e);
+    }
+    if (!proj) return next(new ExpressError("Project not found", 404));
 
-  // Verify that the user is the author or an admin of the project
-  const proj = await Project.findById(projectId);
-  if (!proj) return next(new ExpressError("Not found", 404));
+    // Add the project to the request
+    req.project = proj;
+  } else {
+    proj = req.project;
+  }
 
   if (proj.admins.includes(userId) || proj.author._id.equals(userId)) {
     return next();
   }
+
   return res.status(401).send("Unauthorized");
 };

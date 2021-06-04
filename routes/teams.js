@@ -2,8 +2,7 @@ const express = require("express");
 const router = express.Router({ mergeParams: true });
 const { op, field, execute } = require("../controllers/teams.js");
 const catchAsync = require("../utils/catchAsync");
-const { ensureAdmin } = require("../utils/middleware.js");
-router.use(ensureAdmin);
+
 router.put(
   "/addUser",
   catchAsync((req, res, next) => execute(req, res, next, op.ADD, field.TEAM))

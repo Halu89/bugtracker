@@ -1,13 +1,23 @@
 const Project = require("../models/project");
 const ExpressError = require("../utils/ExpressError");
 
+const details = async (req, res, next) => {
+  const projectId = req.project._id;
+  const proj = await Project.findById(projectId)
+    .populate("author", ["username", "email"])
+    .populate("issues", "title")
+    .populate("admins", ["username", "email"])
+    .populate("team", ["username", "email"]);
+
+  return res.status(200).json(proj);
+};
+
 const index = async (req, res, next) => {
   const userId = req.user._id;
   const projects = await Project.find()
-    // User is the project author or in the project team, or in the project admins
+    // User is the project author or in the project's team, or in the project's admins
     // {$or : [{author: userId}, {teams:userId}, {admins:userId}]}
     .or([{ author: userId }, { team: userId }, { admins: userId }])
-    .populate("author", ["username", "email"])
     .populate("issues", "title");
 
   return res.status(200).json(projects);
@@ -53,4 +63,5 @@ module.exports = {
   create,
   update,
   destroy,
+  details,
 };

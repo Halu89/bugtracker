@@ -11,7 +11,8 @@ const { db } = require("../utils");
  */
 async function execute(req, res, next, operation, field) {
   const user = await db.getUser(req.body.username, next);
-  const proj = await db.getProject(req.params.projectId, next);
+  const proj = req.project; // Extract the project from our middleware
+  //Verify that we don't duplicate entries in array
   if (operation === "push" && proj[field].includes(user._id)) {
     return next(new ExpressError(`User already in ${field}`, 400));
   }

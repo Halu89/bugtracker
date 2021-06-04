@@ -5,25 +5,23 @@ const { db, auth } = require("../utils");
 
 const index = async (req, res, _next) => {
   const { projectId } = req.params;
-  const issue = await Issue.find({ project: projectId })
-    .populate("author", ["username", "email"])
-    .populate("project", "name");
+  const issue = await Issue.find({ project: projectId }).populate("author", [
+    "username",
+    "email",
+  ]);
   return res.status(200).json(issue);
 };
 
 const create = async (req, res, next) => {
-  const { projectId } = req.params;
   const { title, statusText, description } = req.body;
   if (!title || !description)
     return next(new ExpressError("Missing data", 400));
-  const project = await Project.findById(projectId);
-  if (!project) return next(new ExpressError("Project not found", 404));
-
+  //TODO verify that we don't put undefined in the DB
   const newIssue = new Issue({
     title,
     statusText,
     description,
-    project: projectId,
+    project: req.project._id, // Extract the project from our middleware
     author: req.user.id, // Extract the user from object added by passport
   });
   await newIssue.save();
@@ -35,7 +33,8 @@ const show = async (req, res, next) => {
   const { id } = req.params;
   const issue = await Issue.findById(id)
     .populate("author", ["username", "email"])
-    .populate("project", "name");
+    .populate("project", "name")
+    .populate("assignedTo", ["username", "email"]);
   if (!issue) return next(new ExpressError("Issue not found", 404));
 
   return res.status(200).json(issue);
@@ -67,8 +66,7 @@ const destroy = async (req, res, next) => {
 
 const assignUser = async (req, res, next) => {
   const user = await db.getUser(req.body.username, next);
-  const proj = await db.getProject(req.params.projectId, next);
-  //TODO proj should be from req.project
+  const proj = req.project;
   const issueId = req.params.id;
 
   const issue = await Issue.findById(issueId);
@@ -91,8 +89,7 @@ const assignUser = async (req, res, next) => {
 
 const unassignUser = async (req, res, next) => {
   const user = await db.getUser(req.body.username, next);
-  const proj = await db.getProject(req.params.projectId, next);
-  //TODO proj should be from req.project
+  const proj = req.project;
   const issueId = req.params.id;
 
   const issue = await Issue.findById(issueId);

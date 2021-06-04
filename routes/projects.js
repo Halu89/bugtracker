@@ -10,7 +10,7 @@ router.get("/", catchAsync(projects.index));
 
 router.post("/", catchAsync(projects.create));
 
-
+router.get("/:projectId/details", auth.ensureMember, catchAsync(projects.details));
 
 //Need admin to update or delete the project
 router.put("/:projectId", auth.ensureAdmin, catchAsync(projects.update));

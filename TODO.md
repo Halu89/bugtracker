@@ -21,6 +21,8 @@
 
 - [x] Add possibility to add/remove users and admins from projects
 - [x] Add possibility to assign/remove users from issues
-- [ ] Reorganize the permission checking middleware, and add project to the request to avoid unnecessary db calls.
+- [x] Reorganize the permission checking middleware, and add project to the request to avoid unnecessary db calls.
 
+
+- [ ] Restrict issue assignments to team members or automatically add the user to the team
 - [ ] Unit tests

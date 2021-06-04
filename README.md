@@ -24,10 +24,12 @@ The request body needs to include the following properties:
 Example
 
 ```
+   POST /auth/signup
+
 {
-   "username": "Valentin",
-   "email": "valentin@example.com"
-   "password": "secret"
+   "username": "SantaKlaus",
+   "email": "redmanwithabeard@northpole.no"
+   "password": "Be4G00dB0y"
 }
 ```
 
@@ -61,21 +63,28 @@ GET `/projects`
 Returns the list of the projects you're a part of.
 
 ### Get a single project details
-> Not implemented atm
 
-GET `/projects/details`
+GET `/projects/:projectId/details`
 
 Retrieve detailed information about a project.
+
+Response :
 
 ```
 {
     _id: projectId,
     name: String,
     description: String,
-    author: userId,
-    team: [userId],
-    admins: [userId],
-    issues: [issueId],
+    author: user,
+    team: [
+      { _id, username, email},
+      ],
+    admins: [
+      { _id, username, email},
+      ],
+    issues: [
+      { _id, title},
+      ],
     createdAt: Date,
     updatedAt: Date,
 }
@@ -119,7 +128,7 @@ The request allows you to update the following properties:
 Example
 
 ```
-PATCH /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
+PUT /projects/60b0ff873b7570331c240b7a
 Authorization: Bearer <YOUR TOKEN>
 
 {
@@ -139,12 +148,14 @@ Delete an existing project.
 Example
 
 ```
-DELETE /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
+DELETE /projects/60b0ff873b7570331c240b7a
 Authorization: Bearer <YOUR TOKEN>
 ```
 
 ## Project Management
+
 You need to be the author or an admin of a project to be authorized.
+
 ### Add a user to a project's team
 
 PUT `/projects/:projectId/addUser`
@@ -156,7 +167,7 @@ Include the username in the body
 Example
 
 ```
-PATCH /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
+PUT /projects/60b0ff873b7570331c240b7a/addUser
 Authorization: Bearer <YOUR TOKEN>
 
 {
@@ -175,7 +186,7 @@ Include the username in the body
 Example
 
 ```
-PATCH /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
+PUT /projects/60b0ff873b7570331c240b7a/removeUser
 Authorization: Bearer <YOUR TOKEN>
 
 {
@@ -194,7 +205,7 @@ Include the username in the body
 Example
 
 ```
-PATCH /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
+PUT /projects/60b0ff873b7570331c240b7a/addAdmin
 Authorization: Bearer <YOUR TOKEN>
 
 {
@@ -213,7 +224,7 @@ Include the username in the body
 Example
 
 ```
-PATCH /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
+PUT /projects/60b0ff873b7570331c240b7a/removeAdmin
 Authorization: Bearer <YOUR TOKEN>
 
 {
@@ -243,8 +254,10 @@ Retrieve detailed information about an issue.
     title: String,
     description: String,
     project: projectId ,
-    author: userId,
-    assignedTo: [userid],
+    author: {_id, username, email},
+    assignedTo: [
+      {_id, username, email_},
+      ],
     statusText: String,
     isOpen: Boolean,
     createdAt: Date,
@@ -264,7 +277,7 @@ The request body needs to include the following properties:
 Example
 
 ```
-POST /projects/:projectId/
+POST /projects/60b0ff873b7570331c240b7a/
 Authorization: Bearer <YOUR TOKEN>
 
 {
@@ -288,7 +301,7 @@ The request allows you to update the following properties:
 Example
 
 ```
-PATCH /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
+PUT /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
 Authorization: Bearer <YOUR TOKEN>
 
 {
@@ -303,11 +316,53 @@ Authorization: Bearer <YOUR TOKEN>
 
 DELETE `/projects/:projectId/:issueId`
 
-Delete an existing issue.
+Delete an existing issue. Need to be a project admin
 
 Example
 
 ```
 DELETE /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5
 Authorization: Bearer <YOUR TOKEN>
+```
+
+### Assign an issue
+
+PUT `/projects/:projectId/:issueId/assignUser`
+
+Assign a user to an existing issue.
+You need to be a project admin or you can only assign yourself.
+The request expects a username:
+
+- `username` - String
+
+Example
+
+```
+PUT /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5/assignUser
+Authorization: Bearer <YOUR TOKEN>
+
+{
+    username: "Rudolph"
+}
+```
+
+### Unassign an issue
+
+PUT `/projects/:projectId/:issueId/assignUser`
+
+Unassign a user to an existing issue.
+You need to be a project admin or you can only remove yourself.
+The request expects a username:
+
+- `username` - String
+
+Example
+
+```
+PUT /projects/60b0ff873b7570331c240b7a/PF6MflPDcuhWobZcgmJy5/unassignUser
+Authorization: Bearer <YOUR TOKEN>
+
+{
+    username: "Rudolph"
+}
 ```

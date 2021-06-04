@@ -164,4 +164,52 @@ describe("Projects Controllers", () => {
       expect(jsonStub).to.have.been.calledOnce;
     });
   });
+  context("Details", () => {
+    let mockQuery, findStub;
+
+    beforeEach(async () => {
+      mockQuery = {};
+      populateStub = sinon.stub().returns(mockQuery);
+      populateStub.onCall(3).resolves(sampleProject);
+      mockQuery.populate = populateStub;
+
+      findStub = sinon.stub(mongoose.Model, "findById").returns(mockQuery);
+
+      await projects.details(req, res, next);
+    });
+    afterEach(() => {
+      sinon.restore();
+    });
+    it("Should get a project from the db", () => {
+      expect(findStub).to.have.been.calledOnceWithExactly(req.project._id);
+    });
+    it("Should populate the author field with username and email", () => {
+      expect(populateStub.getCall(0)).to.have.been.calledWith("author", [
+        "username",
+        "email",
+      ]);
+    });
+    it("Should populate the issues field with title", () => {
+      expect(populateStub.getCall(1)).to.have.been.calledWith(
+        "issues",
+        "title"
+      );
+    });
+    it("Should populate the admins field with username and email", () => {
+      expect(populateStub.getCall(2)).to.have.been.calledWith("admins", [
+        "username",
+        "email",
+      ]);
+    });
+    it("Should populate the team field with username and email", () => {
+      expect(populateStub.getCall(3)).to.have.been.calledWith("team", [
+        "username",
+        "email",
+      ]);
+    });
+    it("Should return a json with status 200", () => {
+      expect(res.status).to.have.been.calledWith(200);
+      expect(jsonStub).to.have.been.calledWith(sampleProject);
+    });
+  });
 });

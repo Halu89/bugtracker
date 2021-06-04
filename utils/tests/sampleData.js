@@ -10,6 +10,8 @@ const sampleProject = {
   description: "fake_description",
   author: getId(),
   issues: [getId(), getId(), getId()],
+  admins: [getId(), getId(), getId()],
+  team: [getId(), getId(), getId()],
 };
 
 const sampleIssue = {
@@ -18,7 +20,7 @@ const sampleIssue = {
   description: "fake_description",
   project: getId(),
   author: getId(),
-  assignedTo: [getId()],
+  assignedTo: [getId(), getId()],
   statusText: "fake_status",
 };
 

@@ -71,19 +71,18 @@ const assignUser = async (req, res, next) => {
 
   if (
     !(
-      proj.teams.includes(user._id) ||
+      proj.team.includes(user._id) ||
       proj.admins.includes(user._id) ||
       proj.author.equals(user._id)
     )
   ) {
     return next(new ExpressError("User not in the project", 400));
   }
-
   if (!auth.checkPermission(user, proj, req)) {
     // If a regular user tries to assign someone other than himself to the issue
     return res.status(401).send("Unauthorized");
   }
-  
+
   const issue = await Issue.findById(issueId);
   if (!issue) {
     return next(new ExpressError("Issue not found", 404));
@@ -102,16 +101,15 @@ const unassignUser = async (req, res, next) => {
   const proj = req.project;
   const issueId = req.params.id;
 
-  const issue = await Issue.findById(issueId);
-  if (!issue) {
-    return next(new ExpressError("Issue not found", 404));
-  }
-
   if (!auth.checkPermission(user, proj, req)) {
     // If a regular user tries to assign someone other than himself to the issue
     return res.status(401).send("Unauthorized");
   }
 
+  const issue = await Issue.findById(issueId);
+  if (!issue) {
+    return next(new ExpressError("Issue not found", 404));
+  }
   issue.assignedTo.pull(user._id);
   const editedIssue = await issue.save();
 

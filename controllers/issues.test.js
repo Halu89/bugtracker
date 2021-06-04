@@ -9,17 +9,22 @@ const rewire = require("rewire");
 
 const mongoose = require("mongoose");
 const ExpressError = require("../utils/ExpressError");
+const { db, auth } = require("../utils");
 let issues = rewire("./issues");
-const { sampleUser, sampleProject } = require("../utils/tests/sampleData");
+const {
+  sampleUser,
+  sampleProject,
+  sampleIssue,
+} = require("../utils/tests/sampleData");
 let sandbox = sinon.createSandbox();
 
 describe("Issues controllers", () => {
   let req, res, next, jsonStub, findStub, populateStub;
-  let findByIdStub;
   beforeEach(() => {
     req = {
       params: {
         projectId: new mongoose.Types.ObjectId(),
+        id: new mongoose.Types.ObjectId(),
       },
       body: {
         title: "bar",
@@ -30,7 +35,12 @@ describe("Issues controllers", () => {
       project: sampleProject,
     };
     jsonStub = sandbox.stub().returns("fake_json");
-    res = { json: jsonStub, status: () => res }; //persists through restores ?
+    res = {
+      json: jsonStub,
+      send: sinon.stub(),
+    };
+    res.status = sinon.stub().returns(res);
+    next = sinon.stub();
   });
   afterEach(() => {
     sandbox.restore();
@@ -157,10 +167,7 @@ describe("Issues controllers", () => {
   context("Update", () => {
     let result;
     beforeEach(async () => {
-      req = {
-        params: { id: new mongoose.Types.ObjectId() },
-        body: { title: "fake title", description: "fake desc" },
-      };
+      req.body = { title: "fake title", description: "fake desc" };
       updateStub = sandbox
         .stub(mongoose.Model, "findByIdAndUpdate")
         .resolves("edited_issue");
@@ -212,6 +219,171 @@ describe("Issues controllers", () => {
 
       await issues.destroy(req, res, next);
       expect(next).to.have.been.calledOnce;
+    });
+  });
+  context("AssignUser", () => {
+    let userStub, fakeIssue, permStub, saveStub, includeStub;
+    beforeEach(async () => {
+      req.body = { username: "fake username" };
+      sinon.spy(Array.prototype, "push");
+      saveStub = sinon.stub().resolves("fake edited issue");
+      userStub = sinon.stub(db, "getUser").resolves(req.project.team[0]);
+      permStub = sinon.stub(auth, "checkPermission").returns(true);
+      fakeIssue = { ...sampleIssue };
+      fakeIssue.assignedTo = [];
+      fakeIssue.save = saveStub;
+      findStub = sinon.stub(mongoose.Model, "findById").resolves(fakeIssue);
+
+      await issues.assignUser(req, res, next);
+    });
+    afterEach(() => {
+      sinon.restore();
+    });
+    context("Should test that the user is in the project", () => {
+      beforeEach(() => {
+        fakeIssue.assignedTo = []; // Reset after first fn call
+      });
+
+      it("Should get a user from the username given", () => {
+        expect(userStub).to.have.been.calledWith(req.body.username, next);
+      });
+      it("Keeps going if username is in the team", async () => {
+        userStub.resolves(req.project.team[0]);
+        await issues.assignUser(req, res, next);
+        expect(next).to.not.have.been.called;
+      });
+      it("Keeps going if username is in the admins", async () => {
+        userStub.resolves(req.project.admins[0]);
+        await issues.assignUser(req, res, next);
+        expect(next).to.not.have.been.called;
+      });
+      it("Keeps going if username is the author", async () => {
+        userStub.resolves(req.project.author);
+        await issues.assignUser(req, res, next);
+        expect(next).to.not.have.been.called;
+      });
+      it("Calls next when not in the project", async () => {
+        userStub.resolves({ _id: 2, username: "fake username" });
+        await issues.assignUser(req, res, next);
+        expect(next.getCall(0).firstArg.message).to.eql(
+          "User not in the project"
+        );
+        expect(next.getCall(0).firstArg.statusCode).to.eql(400);
+      });
+    });
+    context("Should check for permissions", () => {
+      it("Calls for checkPermission", () => {
+        expect(permStub).to.have.been.called;
+      });
+      it("Pass an error if no permission", async () => {
+        sinon.resetHistory();
+        permStub.returns(false);
+        await issues.assignUser(req, res, next);
+        expect(res.status).to.have.been.calledWith(401);
+        expect(res.send).to.have.been.calledWith("Unauthorized");
+      });
+    });
+    context("Should get an issue", () => {
+      it("Should verify that the issue exists", async () => {
+        sandbox.resetHistory();
+        findStub.resolves(null);
+        await issues.assignUser(req, res, next);
+
+        expect(next).to.have.been.called;
+        expect(next.getCall(0).firstArg.message).to.eql("Issue not found");
+        expect(next.getCall(0).firstArg.statusCode).to.eql(404);
+      });
+      it("Should call the db for an issue", () => {
+        expect(findStub).to.have.been.calledWith(req.params.id);
+      });
+    });
+    context("Should push the user to the array and save", () => {
+      it("Should verify that the user is not already in the array", async () => {
+        sinon.resetHistory();
+        findStub.resolves({ ...fakeIssue, assignedTo: [req.project.team[0]] });
+        await issues.assignUser(req, res, next);
+        expect(next).to.have.been.called;
+        // ExpressError
+        expect(next.getCall(0).firstArg.statusCode).to.eql(400);
+        expect(next.getCall(0).firstArg.message).to.eql(
+          "User already assigned to that issue"
+        );
+      });
+      it("Should push the user to the array", () => {
+        expect(Array.prototype.push).to.have.been.calledOnceWithExactly(
+          req.project.team[0]._id
+        );
+      });
+      it("Should save the user", () => {
+        expect(saveStub).to.have.been.called;
+      });
+    });
+    it("Should return a json with status 200", () => {
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith("fake edited issue");
+    });
+  });
+
+  context("Unassign User", () => {
+    let userStub, pullStub, permStub, findStub, fakeIssue;
+    beforeEach(async () => {
+      pullStub = sinon.stub();
+      userStub = sinon.stub(db, "getUser").resolves(sampleUser);
+      permStub = sinon.stub(auth, "checkPermission").returns(true);
+      fakeIssue = {
+        ...sampleIssue,
+        save: sinon.stub().returns("fake edited issue"),
+        assignedTo: { pull: pullStub },
+      };
+      findStub = sinon.stub(mongoose.Model, "findById").resolves(fakeIssue);
+
+      await issues.unassignUser(req, res, next);
+    });
+    afterEach(() => {
+      sinon.restore();
+    });
+    it("Should find a user from the db", () => {
+      expect(userStub).to.have.been.calledOnceWithExactly(
+        req.body.username,
+        next
+      );
+    });
+    it("Should check for permission", async () => {
+      expect(permStub).to.have.been.calledOnce;
+      expect(next).to.not.have.been.called;
+
+      sinon.resetHistory();
+      permStub.returns(false);
+      await issues.unassignUser(req, res, next);
+
+      expect(res.status).to.have.been.calledOnceWithExactly(401);
+      expect(res.send).to.have.been.calledOnceWithExactly("Unauthorized");
+    });
+    context("Should get an issue", () => {
+      it("Should call the db for an issue", () => {
+        expect(findStub).to.have.been.calledWith(req.params.id);
+      });
+      it("Should verify that the issue exists", async () => {
+        sandbox.resetHistory();
+        findStub.resolves(null);
+        await issues.unassignUser(req, res, next);
+
+        expect(next).to.have.been.called;
+        expect(next.getCall(0).firstArg.message).to.eql("Issue not found");
+        expect(next.getCall(0).firstArg.statusCode).to.eql(404);
+      });
+    });
+    context("Should pull the user from the array and save", () => {
+      it("Should pull the user from the array", () => {
+        expect(pullStub).to.have.been.calledOnceWithExactly(sampleUser._id);
+      });
+      it("Should save the user", () => {
+        expect(fakeIssue.save).to.have.been.called;
+      });
+    });
+    it("Should return a json with status 200", () => {
+      expect(res.status).to.have.been.calledWith(200);
+      expect(res.json).to.have.been.calledWith("fake edited issue");
     });
   });
 });

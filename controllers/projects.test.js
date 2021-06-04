@@ -8,6 +8,7 @@ chai.use(chaiAsPromised);
 const rewire = require("rewire");
 
 const mongoose = require("mongoose");
+const { sampleUser, sampleProject } = require("../utils/tests/sampleData");
 
 let projects = rewire("./projects");
 
@@ -16,38 +17,71 @@ describe("Projects Controllers", () => {
   beforeEach(() => {
     jsonStub = sinon.stub();
     res = { status: sinon.stub().returns({ json: jsonStub }) };
+    req = { user: sampleUser, project: sampleProject };
     next = sinon.stub();
   });
   afterEach(() => {
     sinon.restore();
   });
-
-  context("Index", () => {
-    req = { user: { projects: [1, 2, 3] } };
-    let findStub, popStub, secondPopStub, inStub;
+  context("Details", () => {
+    let mockQuery, findStub, popStub;
     beforeEach(async () => {
-      secondPopStub = sinon.stub().resolves("project");
-      popStub = sinon.stub().returns({ populate: secondPopStub });
+      mockQuery = {};
+      findStub = sinon.stub(mongoose.Model, "findById").returns(mockQuery);
+      popStub = sinon.stub().returns(mockQuery);
+      popStub.onCall(3).resolves(sampleProject);
+      mockQuery.populate = popStub;
 
-      inStub = sinon.stub().returns({ populate: popStub });
-
+      await projects.details(req, res, next);
+    });
+    it("Should get the project details", () => {
+      expect(findStub).to.have.been.calledWith(req.project._id);
+      expect(popStub.callCount).to.eq(4);
+    });
+    it("Should populate the author", () => {
+      expect(popStub.getCall(0)).to.have.been.calledWith("author", [
+        "username",
+        "email",
+      ]);
+    });
+    it("Should populate the issues", () => {
+      expect(popStub.getCall(1)).to.have.been.calledWith("issues");
+    });
+    it("Should populate the admins", () => {
+      expect(popStub.getCall(2)).to.have.been.calledWith("admins", [
+        "username",
+        "email",
+      ]);
+    });
+    it("Should populate the team", () => {
+      expect(popStub.getCall(3)).to.have.been.calledWith("team", [
+        "username",
+        "email",
+      ]);
+    });
+  });
+  context("Index", () => {
+    let findStub, popStub, orStub;
+    beforeEach(async () => {
+      popStub = sinon.stub().resolves("project");
+      orStub = sinon.stub().returns({ populate: popStub });
       findStub = sinon.stub(mongoose.Model, "find").returns({
-        where: sinon.stub().returns({
-          in: inStub,
-        }),
+        or: orStub,
       });
 
       await projects.index(req, res, next);
     });
     it("Should query the DB for the user projects", () => {
+      const userId = req.user._id;
       expect(findStub).to.have.been.calledOnce;
-      expect(inStub).to.have.been.calledWith(req.user.projects);
-    });
-    it("Should populate the author field with username and email", () => {
-      expect(popStub).to.have.been.calledWith("author", ["username", "email"]);
+      expect(orStub).to.have.been.calledWith([
+        { author: userId },
+        { team: userId },
+        { admins: userId },
+      ]);
     });
     it("Should populate the issues field with title", () => {
-      expect(secondPopStub).to.have.been.calledWith("issues", "title");
+      expect(popStub).to.have.been.calledWith("issues", "title");
     });
     it("Should return a json with status 200", () => {
       expect(jsonStub).to.have.been.calledOnce;
@@ -124,7 +158,7 @@ describe("Projects Controllers", () => {
     it("Should get called with the correct args", () => {
       expect(delStub).to.have.been.calledOnceWith(req.params.projectId);
     });
-    
+
     it("Should return a json with status 200", () => {
       expect(res.status).to.have.been.calledWith(200);
       expect(jsonStub).to.have.been.calledOnce;

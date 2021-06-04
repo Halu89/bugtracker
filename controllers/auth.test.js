@@ -1,3 +1,4 @@
+require("dotenv-safe").config();
 const chai = require("chai");
 const expect = chai.expect;
 const sinon = require("sinon");
@@ -6,13 +7,11 @@ const sinonChai = require("sinon-chai");
 chai.use(sinonChai);
 chai.use(chaiAsPromised);
 const rewire = require("rewire");
-
 const mongoose = require("mongoose");
 var User = require("../models/user");
 let sandbox = sinon.createSandbox();
 const jwt = require("jsonwebtoken");
 const ExpressError = require("../utils/ExpressError");
-const { useFakeServer } = require("sinon");
 
 let authControllers = rewire("./auth");
 
@@ -57,7 +56,7 @@ describe("Auth controllers", () => {
           id: sampleUser._id,
           username: sampleUser.username,
         },
-        undefined, //JWT secret
+        process.env.JWT_SECRET, //JWT secret
         { expiresIn: "14d" }
       );
     });
@@ -112,7 +111,7 @@ describe("Auth controllers", () => {
           id: sampleUser._id,
           username: sampleUser.username,
         },
-        undefined, //JWT secret
+        process.env.JWT_SECRET, //JWT secret
         { expiresIn: "14d" }
       );
       expect(jsonStub).to.have.been.calledOnceWithExactly({

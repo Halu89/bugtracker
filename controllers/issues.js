@@ -22,7 +22,7 @@ const create = async (req, res, next) => {
     statusText,
     description,
     project: req.project._id, // Extract the project from our middleware
-    author: req.user.id, // Extract the user from object added by passport
+    author: req.user._id, // Extract the user from object added by passport
   });
   await newIssue.save();
 
@@ -69,14 +69,24 @@ const assignUser = async (req, res, next) => {
   const proj = req.project;
   const issueId = req.params.id;
 
-  const issue = await Issue.findById(issueId);
-  if (!issue) {
-    return next(new ExpressError("Issue not found", 404));
+  if (
+    !(
+      proj.teams.includes(user._id) ||
+      proj.admins.includes(user._id) ||
+      proj.author.equals(user._id)
+    )
+  ) {
+    return next(new ExpressError("User not in the project", 400));
   }
 
   if (!auth.checkPermission(user, proj, req)) {
     // If a regular user tries to assign someone other than himself to the issue
     return res.status(401).send("Unauthorized");
+  }
+  
+  const issue = await Issue.findById(issueId);
+  if (!issue) {
+    return next(new ExpressError("Issue not found", 404));
   }
   if (issue.assignedTo.includes(user._id)) {
     return next(new ExpressError("User already assigned to that issue", 400));

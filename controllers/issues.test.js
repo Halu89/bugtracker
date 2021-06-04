@@ -10,7 +10,7 @@ const rewire = require("rewire");
 const mongoose = require("mongoose");
 const ExpressError = require("../utils/ExpressError");
 let issues = rewire("./issues");
-
+const { sampleUser, sampleProject } = require("../utils/tests/sampleData");
 let sandbox = sinon.createSandbox();
 
 describe("Issues controllers", () => {
@@ -26,7 +26,8 @@ describe("Issues controllers", () => {
         statusText: "Work in progress",
         description: "fake_description",
       },
-      user: { id: 123, name: "baz" },
+      user: sampleUser,
+      project: sampleProject,
     };
     jsonStub = sandbox.stub().returns("fake_json");
     res = { json: jsonStub, status: () => res }; //persists through restores ?
@@ -35,15 +36,9 @@ describe("Issues controllers", () => {
     sandbox.restore();
   });
   context("Index", () => {
-    let mockQuery;
     beforeEach(() => {
       next = sandbox.stub();
-
-      mockQuery = {};
-      populateStub = sandbox.stub().onFirstCall().returns(mockQuery);
-      populateStub.onSecondCall().resolves("fake_issue");
-      mockQuery.populate = populateStub;
-
+      populateStub = sandbox.stub().resolves("fake_issue");
       findStub = sandbox
         .stub(mongoose.Model, "find")
         .returns({ populate: populateStub });
@@ -63,13 +58,6 @@ describe("Issues controllers", () => {
         "username",
         "email",
       ]);
-    });
-    it("Should populate the project name", async () => {
-      await issues.index(req, res);
-      expect(populateStub.getCall(1)).to.have.been.calledWithExactly(
-        "project",
-        "name"
-      );
     });
     it("Should send a json back", async () => {
       const result = await issues.index(req, res);
@@ -94,23 +82,14 @@ describe("Issues controllers", () => {
       sandbox.restore();
       issues = rewire("./issues");
     });
-    it("Should check that the project from the params exists", async () => {
-      expect(findStub).to.have.been.calledWith(req.params.projectId);
-      sandbox.resetHistory();
-      findStub.resolves(null);
-      next = sandbox.stub();
-      await issues.create(req, res, next);
-      expect(next).to.have.been.calledOnce;
-      expect(next.getCall(0).firstArg).to.be.an("error");
-    });
     it("Should create a new issue", () => {
       expect(FakeIssueModel).to.have.been.calledWithNew;
       expect(FakeIssueModel).to.have.been.calledOnceWithExactly({
         title: req.body.title,
         statusText: req.body.statusText,
         description: req.body.description,
-        author: req.user.id,
-        project: req.params.projectId,
+        author: req.user._id,
+        project: req.project._id,
       });
     });
     it("Should save the issue to the database", () => {
@@ -129,7 +108,8 @@ describe("Issues controllers", () => {
       next = sandbox.stub();
       mockQuery = {};
       populateStub = sandbox.stub().onFirstCall().returns(mockQuery);
-      populateStub.onSecondCall().resolves("fake_issue");
+      populateStub.onSecondCall().returns(mockQuery);
+      populateStub.onThirdCall().resolves("fake_issue");
       mockQuery.populate = populateStub;
       findByIdStub = sandbox
         .stub(mongoose.Model, "findById")
@@ -155,13 +135,19 @@ describe("Issues controllers", () => {
         "name"
       );
     });
+    it("Should populate the assignedTo array", () => {
+      expect(populateStub.getCall(2)).to.have.been.calledWithExactly(
+        "assignedTo",
+        ["username", "email"]
+      );
+    });
     it("Should return a json", () => {
       expect(jsonStub).to.have.been.calledOnceWithExactly("fake_issue");
       expect(result).to.be.equal("fake_json");
     });
     it("Should pass an error if issue not found", async () => {
       sandbox.resetHistory();
-      populateStub.onSecondCall().resolves(null); // No issue found
+      populateStub.onThirdCall().resolves(null); // No issue found
 
       await issues.show(req, res, next);
       expect(next).to.have.been.calledOnce;

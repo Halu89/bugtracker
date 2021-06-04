@@ -20,7 +20,7 @@
 - [x] Add authorization middlewares to the routes
 
 - [x] Add possibility to add/remove users and admins from projects
-- [ ] Add possibility to assign/remove users from issues
+- [x] Add possibility to assign/remove users from issues
 - [ ] Reorganize the permission checking middleware, and add project to the request to avoid unnecessary db calls.
 
 - [ ] Unit tests

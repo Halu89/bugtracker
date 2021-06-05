@@ -25,5 +25,6 @@
 
 
 - [x] Restrict issue assignments to team members or automatically add the user to the team
-- [ ] Unit tests
+- [x] Unit tests
+
 - [ ] Finish postman tests with the teams, admins, and issue assignments.

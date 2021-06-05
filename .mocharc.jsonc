@@ -3,7 +3,7 @@
 {
   "exclude": [
     "./node_modules/**/*.js",
-    "./utils/middleware.test.js",
+    // "./utils/middleware.test.js",
     "./routes/auth.test.js",
     "./routes/issues.test.js"
   ],

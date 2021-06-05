@@ -16,7 +16,7 @@ const create = async (req, res, next) => {
   const { title, statusText, description } = req.body;
   if (!title || !description)
     return next(new ExpressError("Missing data", 400));
-  //TODO verify that we don't put undefined in the DB
+
   const newIssue = new Issue({
     title,
     statusText,
@@ -45,7 +45,9 @@ const update = async (req, res, next) => {
   const update = req.body;
   if (!update) return next(new ExpressError("Missing data", 400));
 
-  const edited = await Issue.findByIdAndUpdate(id, update);
+  const edited = await Issue.findByIdAndUpdate(id, update, {
+    runValidators: true,
+  });
   if (!edited) return next(new ExpressError("Issue not found", 404));
 
   return res.status(200).json(edited);

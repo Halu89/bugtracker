@@ -40,10 +40,14 @@ const update = async (req, res, next) => {
   const { projectId } = req.params;
   const { name, description } = req.body;
   if (!name || !description) return next(new ExpressError("Missing data", 400));
-  const updatedProject = await Project.findByIdAndUpdate(projectId, {
-    name,
-    description,
-  });
+  const updatedProject = await Project.findByIdAndUpdate(
+    projectId,
+    {
+      name,
+      description,
+    },
+    { runValidators: true }
+  );
 
   if (!updatedProject) return next(new ExpressError("Project not found", 404));
 

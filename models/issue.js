@@ -4,12 +4,18 @@ const User = require("./user");
 
 const IssueSchema = new Schema(
   {
-    title: { type: String, required: true },
-    description: { type: String, required: false },
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+      minLength: 1,
+      maxLength: 255,
+    },
+    description: { type: String, required: false, trim: true, maxLength: 5000 },
     project: { type: Schema.Types.ObjectId, ref: "Project", required: true },
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     assignedTo: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    statusText: String,
+    statusText: { type: String, trim: true, maxLength: 255 },
     isOpen: { type: Boolean, default: true, required: true },
   },
   { timestamps: true }
@@ -22,10 +28,10 @@ function postSave(issue) {
   User.findById(authorId).then((user) => {
     //Don't add the issue if we're only saving after an assignedTo update
     if (user.issues.includes(issueId)) return;
-    
+
     // Use MongooseArray method with proper change tracking
     // https://mongoosejs.com/docs/api/array.html
-    
+
     user.issues.push(issueId);
     user.save();
   });

@@ -5,8 +5,14 @@ const Issue = require("./issue");
 
 const ProjectSchema = new Schema(
   {
-    name: { type: String, required: true },
-    description: { type: String, required: true },
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      maxLength: 255,
+      minLength: 1,
+    },
+    description: { type: String, required: false, trim: true, maxLength: 5000 },
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     issues: [{ type: Schema.Types.ObjectId, ref: "Issue" }],
     team: [{ type: Schema.Types.ObjectId, ref: "User" }],

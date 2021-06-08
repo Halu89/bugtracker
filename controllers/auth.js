@@ -9,7 +9,7 @@ exports.signIn = async function (req, res, next) {
     return next(new ExpressError("Missing data", 400));
   // Find the user and compare the password with the store hash
   const { user, error } = await User.findOneAndAuth(username, password);
-
+  const { email, issues, projects } = user;
   if (error)
     return next(new ExpressError("Password or username incorrect", 401));
 
@@ -17,14 +17,16 @@ exports.signIn = async function (req, res, next) {
   const token = jwt.sign({ id: user._id, username }, JWT_SECRET, {
     expiresIn: "14d",
   });
-  return res.status(200).json({ token });
+  return res
+    .status(200)
+    .json({ token, user: { username, email, issues, projects } });
 };
 
 exports.signUp = async function (req, res, next) {
   const { username, email, password } = req.body;
   if (!username || !password || !email)
     return next(new ExpressError("Missing data", 400));
-    
+
   const newUser = new User({ username, email });
 
   //Hash and salt the password
@@ -36,7 +38,9 @@ exports.signUp = async function (req, res, next) {
     const token = jwt.sign({ id, username }, JWT_SECRET, {
       expiresIn: "14d",
     });
-    res.status(200).json({ token });
+    res
+      .status(200)
+      .json({ token, user: { username, email, issues: [], projects: [] } });
   } catch (e) {
     if (e.code === 11000) {
       //Replace the default mongoose duplicate field error message

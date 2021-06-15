@@ -8,6 +8,9 @@ const index = async (req, res, _next) => {
   const issue = await Issue.find({ project: projectId }).populate("author", [
     "username",
     "email",
+  ]).populate("assignedTo", [
+    "username",
+    "email",
   ]);
   return res.status(200).json(issue);
 };

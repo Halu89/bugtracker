@@ -19,7 +19,7 @@ exports.signIn = async function (req, res, next) {
   });
   return res
     .status(200)
-    .json({ token, user: { username, email, issues, projects } });
+    .json({ token, user: { id: user._id, username, email, issues, projects } });
 };
 
 exports.signUp = async function (req, res, next) {
@@ -40,7 +40,10 @@ exports.signUp = async function (req, res, next) {
     });
     res
       .status(200)
-      .json({ token, user: { username, email, issues: [], projects: [] } });
+      .json({
+        token,
+        user: { id: user._id, username, email, issues: [], projects: [] },
+      });
   } catch (e) {
     if (e.code === 11000) {
       //Replace the default mongoose duplicate field error message

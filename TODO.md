@@ -30,3 +30,4 @@
 
 - [ ] Finish postman tests with the teams, admins, and issue assignments.
 - [ ] Redo the issues and projects array on the user model so they store a ref to all the issues and projects the user has access to.
+- [ ] Only allow updates if user is assigned to an issue or an admin

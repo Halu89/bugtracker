@@ -15,11 +15,11 @@ router.use("/auth", authRouter);
 router.use("/projects", auth.ensureAuth()); // Ensure authentication and adds a req.user to all "/projects/*" requests
 router.use("/projects", projectsRouter);
 
-//Issues management
-router.use("/projects/:projectId", auth.ensureMember, issueRouter);
-
 //Teams management : add or remove users or admins from the project
 router.use("/projects/:projectId", auth.ensureAdmin, teamsRouter);
+
+//Issues management
+router.use("/projects/:projectId", auth.ensureMember, issueRouter);
 
 router.get("/protected", auth.ensureAuth(), (req, res) => {
   console.log(req.user);

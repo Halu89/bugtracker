@@ -55,6 +55,7 @@ exports.ensureMember = async (req, res, next) => {
     // Add the project to the request
     req.project = proj;
     // Verify that the user is a team member
+    console.log("*** Verifying the user ***"); //XXX
     if (
       proj.team.includes(userId) ||
       proj.admins.includes(userId) ||
@@ -73,7 +74,7 @@ exports.ensureAdmin = async (req, res, next) => {
   //Look at the user and the project
   const userId = req.user._id;
   let proj;
-
+  console.log("Verifying admin"); //XXX
   // Check if we already have the project details from the request
   if (!req.project) {
     const projectId = req.params.projectId;

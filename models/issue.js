@@ -37,6 +37,8 @@ function postSave(issue) {
   });
   const Project = mongoose.model("Project");
   Project.findById(issue.project._id).then((project) => {
+    if (project.issues.includes(issueId)) return;
+
     project.issues.push(issueId);
     project.save();
   });

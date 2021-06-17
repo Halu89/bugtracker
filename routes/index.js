@@ -16,7 +16,7 @@ router.use("/projects", auth.ensureAuth()); // Ensure authentication and adds a 
 router.use("/projects", projectsRouter);
 
 //Teams management : add or remove users or admins from the project
-router.use("/projects/:projectId", auth.ensureAdmin, teamsRouter);
+router.use("/projects/:projectId", teamsRouter);
 
 //Issues management
 router.use("/projects/:projectId", auth.ensureMember, issueRouter);

@@ -5,13 +5,9 @@ const { db, auth } = require("../utils");
 
 const index = async (req, res, _next) => {
   const { projectId } = req.params;
-  const issue = await Issue.find({ project: projectId }).populate("author", [
-    "username",
-    "email",
-  ]).populate("assignedTo", [
-    "username",
-    "email",
-  ]);
+  const issue = await Issue.find({ project: projectId })
+    .populate("author", ["username", "email"])
+    .populate("assignedTo", ["username", "email"]);
   return res.status(200).json(issue);
 };
 
@@ -97,8 +93,10 @@ const assignUser = async (req, res, next) => {
   }
   issue.assignedTo.push(user._id);
   const editedIssue = await issue.save();
+  
+  await editedIssue.execPopulate("assignedTo", ["username", "email"]);
 
-  return res.status(200).json(editedIssue);
+  return res.status(200).json(populated);
 };
 
 const unassignUser = async (req, res, next) => {
@@ -117,6 +115,8 @@ const unassignUser = async (req, res, next) => {
   }
   issue.assignedTo.pull(user._id);
   const editedIssue = await issue.save();
+
+  await editedIssue.execPopulate("assignedTo", ["username", "email"]);
 
   return res.status(200).json(editedIssue);
 };

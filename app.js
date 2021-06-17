@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use((req, res, next) => {
-  console.log(req.body);
+  console.log("req.body", req.body);
   next();
 });
 app.use(morgan("tiny"));

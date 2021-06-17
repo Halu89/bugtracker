@@ -42,7 +42,7 @@ exports.signUp = async function (req, res, next) {
       .status(200)
       .json({
         token,
-        user: { id: user._id, username, email, issues: [], projects: [] },
+        user: { id: newUser._id, username, email, issues: [], projects: [] },
       });
   } catch (e) {
     if (e.code === 11000) {

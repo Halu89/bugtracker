@@ -96,7 +96,7 @@ const assignUser = async (req, res, next) => {
   
   await editedIssue.execPopulate("assignedTo", ["username", "email"]);
 
-  return res.status(200).json(populated);
+  return res.status(200).json(editedIssue);
 };
 
 const unassignUser = async (req, res, next) => {
